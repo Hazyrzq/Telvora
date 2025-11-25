@@ -1,34 +1,47 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Home from './pages/Home'
-import CMSLayout from './components/CMSLayout'
-import Dashboard from './pages/CMS/Dashboard'
-import Packages from './pages/CMS/Packages'
-import Customers from './pages/CMS/Customers'
-import Recommendations from './pages/CMS/Recommendations'
-import Settings from './pages/CMS/Settings'
+import AdminLayout from './components/AdminLayout'
+import HomeAdmin from './pages/Admin/Home'
+import Product from './pages/Admin/Product'
+import UserProfile from './pages/Admin/UserProfile'
+import Analytic from './pages/Admin/Analytic'
+import Login from './pages/Login'
+import HomeLayout from './layouts/HomeLayout'
+import { AuthProvider } from './contexts/AuthContext'
+import RequireAuth from './components/RequireAuth'
 import './styles/App.css'
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/cms" element={<CMSLayout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="packages" element={<Packages />} />
-          <Route path="customers" element={<Customers />} />
-          <Route path="recommendations" element={<Recommendations />} />
-          <Route path="settings" element={<Settings />} />
-        </Route>
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<HomeLayout />}>
+            <Route index element={<Home />} />
+            <Route path="login" element={<Login />} />
+          </Route>
+
+          <Route
+            path="/admin"
+            element={
+              <RequireAuth>
+                <AdminLayout />
+              </RequireAuth>
+            }
+          >
+            <Route index element={<HomeAdmin />} />
+            <Route path="packages" element={<Product />} />
+            <Route path="customers" element={<UserProfile />} />
+            <Route path="recommendations" element={<Analytic />} />
+          </Route>
+        </Routes>
+      </Router>
+    </AuthProvider>
   )
 }
 
 export default App
-
-
 
 
 

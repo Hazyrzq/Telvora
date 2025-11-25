@@ -1,0 +1,114 @@
+/* How It Works Section */
+.analytics-steps {
+  background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+  padding: 80px 20px;
+  border-top: 1px solid #e9ecef;
+}
+
+.analytics-steps .container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.analytics-steps h2 {
+  font-size: 36px;
+  font-weight: 800;
+  margin: 0 0 48px 0;
+  color: #1a1a1a;
+  text-align: center;
+}
+
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+}
+
+.step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 32px 24px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.step-item:hover {
+  border-color: #0066cc;
+  box-shadow: 0 8px 24px rgba(0, 102, 204, 0.12);
+  transform: translateY(-4px);
+}
+
+.step-no {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0066cc, #3385d6);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+}
+
+.step-text {
+  color: #1a1a1a;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+/* Connecting lines between steps (desktop only) */
+@media (min-width: 769px) {
+  .steps-grid {
+    position: relative;
+  }
+
+  .step-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 24px;
+    left: 100%;
+    width: 24px;
+    height: 2px;
+    background: linear-gradient(90deg, #0066cc, transparent);
+    transform: translateX(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .analytics-steps {
+    padding: 48px 16px;
+  }
+
+  .analytics-steps h2 {
+    font-size: 28px;
+    margin-bottom: 32px;
+  }
+
+  .steps-grid {
+    gap: 16px;
+  }
+
+  .step-item {
+    padding: 24px 20px;
+  }
+
+  .step-no {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  .step-text {
+    font-size: 14px;
+  }
+}

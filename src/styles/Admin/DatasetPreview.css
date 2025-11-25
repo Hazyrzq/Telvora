@@ -1,0 +1,43 @@
+/* Dataset Preview Component Styles */
+
+.dataset-preview {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.dataset-preview h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 16px 0;
+}
+
+.preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.preview-table thead {
+  background: linear-gradient(90deg, #f0f5ff, #e8f1ff);
+  border-bottom: 2px solid #0066cc;
+}
+
+.preview-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.preview-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.preview-table tbody tr:hover {
+  background-color: #f5f8ff;
+}

@@ -53,6 +53,13 @@ File batch helper untuk memudahkan:
 1. **Double-click `install.bat`** - Untuk install dependencies
 2. **Double-click `run-dev.bat`** - Untuk menjalankan development server
 
+## Konfigurasi Supabase
+
+1. Salin `public/config.example.js` menjadi `public/config.js`.
+2. Isi `window.__SB_URL__` dengan URL project Supabase (`https://xxxxx.supabase.co`) dan `window.__SB_KEY__` dengan publishable anon key (`sb_publishable_...`).
+3. Alternatifnya, Anda bisa memakai env file Vite (`.env`) dengan `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY`. Nilai di env memiliki prioritas dibanding `config.js`.
+4. Di dashboard Supabase, whitelist origin dev server (misal `http://localhost:5174`) pada menu Authentication → URL Configuration.
+
 ## Struktur Project
 
 ```
