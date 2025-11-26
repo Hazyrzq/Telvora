@@ -1,24 +1,25 @@
-/* Modern Dashboard Styling */
+/* Modern Dashboard Styling – GREEN THEME */
 .cms-dashboard {
   width: 100%;
 }
 
+/* Header */
 .dashboard-header {
   margin-bottom: 32px;
   padding-bottom: 24px;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid #e4f6ec;
 }
 
 .dashboard-header h1 {
   font-size: 28px;
   font-weight: 800;
-  color: #1a1a1a;
+  color: #0f3d2e;
   margin: 0 0 8px 0;
 }
 
 .dashboard-header p {
   font-size: 14px;
-  color: #666;
+  color: #567c6b;
   margin: 0;
 }
 
@@ -32,7 +33,7 @@
 
 .quick-stat-card {
   background: white;
-  border: 1px solid #e9ecef;
+  border: 1px solid #e4f6ec;
   border-radius: 12px;
   padding: 24px;
   display: flex;
@@ -43,8 +44,8 @@
 }
 
 .quick-stat-card:hover {
-  border-color: #0066cc;
-  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.1);
+  border-color: #00c16a;
+  box-shadow: 0 4px 12px rgba(0, 153, 77, 0.15);
   transform: translateY(-2px);
 }
 
@@ -52,6 +53,8 @@
   width: 64px;
   height: 64px;
   border-radius: 12px;
+  background: #f2fdf7;
+  color: #00c16a;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -62,13 +65,13 @@
 .stat-details h3 {
   font-size: 24px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #0f3d2e;
   margin: 0 0 4px 0;
 }
 
 .stat-details p {
   font-size: 13px;
-  color: #999;
+  color: #6b8f80;
   margin: 0 0 8px 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -91,7 +94,7 @@
 
 .dashboard-card {
   background: white;
-  border: 1px solid #e9ecef;
+  border: 1px solid #e4f6ec;
   border-radius: 12px;
   padding: 24px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
@@ -100,10 +103,10 @@
 .dashboard-card h2 {
   font-size: 18px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #0f3d2e;
   margin: 0 0 24px 0;
   padding-bottom: 16px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #eaf7f0;
 }
 
 /* Chart Container */
@@ -121,10 +124,10 @@
   justify-content: space-between;
   text-align: right;
   padding-right: 16px;
-  border-right: 1px solid #e9ecef;
+  border-right: 1px solid #e4f6ec;
   min-width: 50px;
   font-size: 12px;
-  color: #999;
+  color: #6b8f80;
   font-weight: 500;
 }
 
@@ -157,6 +160,7 @@
   border-radius: 6px 6px 0 0;
   transition: all 0.3s ease;
   cursor: pointer;
+  background: linear-gradient(to top, #00c16a, #00994d);
 }
 
 .bar:hover {
@@ -169,18 +173,13 @@
   gap: 12px;
   justify-content: space-around;
   padding-top: 12px;
-  border-top: 1px solid #e9ecef;
+  border-top: 1px solid #e4f6ec;
   font-size: 12px;
-  color: #999;
+  color: #6b8f80;
   font-weight: 500;
 }
 
-.chart-x-axis div {
-  flex: 1;
-  text-align: center;
-}
-
-/* Quick Stats List */
+/* List */
 .quick-stats-list {
   display: flex;
   flex-direction: column;
@@ -192,15 +191,15 @@
   align-items: center;
   gap: 16px;
   padding: 16px;
-  background: #fafbfc;
+  background: #f2fdf7;
   border-radius: 10px;
-  border: 1px solid #f0f0f0;
+  border: 1px solid #e4f6ec;
   transition: all 0.3s ease;
 }
 
 .quick-stat-item:hover {
-  background: #f0f4ff;
-  border-color: #0066cc;
+  background: #e1faef;
+  border-color: #00c16a;
 }
 
 .stat-icon-small {
@@ -212,16 +211,13 @@
   justify-content: center;
   background: white;
   border-radius: 10px;
+  color: #00c16a;
   flex-shrink: 0;
-}
-
-.stat-content {
-  flex: 1;
 }
 
 .stat-content p {
   font-size: 12px;
-  color: #999;
+  color: #6b8f80;
   margin: 0 0 4px 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -231,16 +227,8 @@
 .stat-content h3 {
   font-size: 18px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #0f3d2e;
   margin: 0;
-}
-
-.stat-badge {
-  font-size: 12px;
-  font-weight: 700;
-  padding: 4px 12px;
-  border-radius: 6px;
-  white-space: nowrap;
 }
 
 .stat-badge.positive {
@@ -251,69 +239,4 @@
 .stat-badge.negative {
   color: #e53935;
   background: rgba(229, 57, 53, 0.1);
-}
-
-/* Responsive */
-@media (max-width: 1024px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .quick-stats-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-@media (max-width: 768px) {
-  .dashboard-header {
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-  }
-
-  .dashboard-header h1 {
-    font-size: 24px;
-  }
-
-  .quick-stats-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .quick-stat-card {
-    padding: 16px;
-    gap: 12px;
-  }
-
-  .stat-icon {
-    width: 56px;
-    height: 56px;
-    font-size: 28px;
-  }
-
-  .stat-details h3 {
-    font-size: 20px;
-  }
-
-  .dashboard-card {
-    padding: 16px;
-  }
-
-  .dashboard-card h2 {
-    font-size: 16px;
-    margin-bottom: 16px;
-  }
-
-  .chart-container {
-    height: 250px;
-    gap: 8px;
-  }
-
-  .chart-bars {
-    height: 150px;
-  }
-
-  .chart-y-axis {
-    min-width: 40px;
-    font-size: 11px;
-  }
 }
