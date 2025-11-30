@@ -1,33 +1,77 @@
-.App {
-  width: 100%;
+/* Import Google Fonts - Rajdhani & Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* ==========================
+   TELMI Analytics Portal Theme (Diperbarui dengan palet Cyan/Teal)
+   ========================== */
+
+/* Color Palette - TELMI Tech Theme */
+:root {
+  /* Backgrounds */
+  --bg-dark: #0a1f1a;
+  --bg-darker: #071612;
+  --bg-card: rgba(20, 35, 30, 0.95);
+  --bg-teal-dark: #1a3f2d;
+  --bg-teal-darker: #0f2920;
+  
+  /* Text Colors (Mengambil dari palet AnalyticsFeatures) */
+  --text-primary: #ffffff;
+  --text-secondary: #e0f5ee; /* Diambil dari AnalyticsFeatures */
+  --text-muted: #a8d5c3; /* Diambil dari AnalyticsFeatures */
+  
+  /* Cyan/Teal Theme */
+  --cyan-primary: #00ffcc;
+  --cyan-dark: #00ddaa;
+  --cyan-darker: #00bb88;
+  --cyan-glow: rgba(0, 255, 204, 0.3); /* Disesuaikan ke 0.3 untuk Hero/Features */
+  --cyan-soft: rgba(0, 255, 204, 0.08);
+  
+  /* Borders & Shadows */
+  --card-border: rgba(0, 255, 204, 0.15); /* Disesuaikan ke 0.15 */
+  --shadow-glow: 0 8px 32px rgba(0, 255, 204, 0.15);
+  --shadow-strong: 0 12px 48px rgba(0, 0, 0, 0.4);
+  
+  /* Status Colors & Primary Color */
+  --primary-color: #00ffcc;
+  --success: #00ff88;
+  --warning: #ffc107;
+  --danger: #ff4444;
+  --info: #00ffcc;
+}
+
+/* ==========================
+   BASE STYLES & APP CONTAINER (Sama seperti sebelumnya)
+   ========================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Menggunakan BG Dark utama untuk konsistensi */
+  background: var(--bg-dark); 
+  color: var(--text-primary);
   min-height: 100vh;
   overflow-x: hidden;
 }
 
-.home-page {
-  position: relative;
-}
+/* ... (Sisa kode body, code, .App, dan animasi di app.css tetap sama) ... */
 
-/* Smooth scroll behavior */
-html {
-  scroll-behavior: smooth;
-}
+/* ==========================
+   BUTTONS & INTERACTIVE ELEMENTS (Menggunakan variabel baru)
+   ========================== */
+/* ... (Gaya Button dan Card di app.css tetap sama) ... */
 
-/* Section spacing improvements */
-section {
-  position: relative;
-  overflow: hidden;
-}
-
-/* Enhanced focus styles for accessibility */
-*:focus-visible {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-
-
-
-
-
+/* ==========================
+   UTILITY CLASSES & MEDIA QUERIES (Sama seperti sebelumnya)
+   ========================== */
+/* ... */

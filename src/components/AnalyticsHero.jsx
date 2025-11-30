@@ -8,9 +8,14 @@ const AnalyticsHero = () => {
       <div className="container">
         <div className="hero-content">
           <h1>TELMI Analytics Portal</h1>
-          <p className="hero-subtitle">Platform manajemen pelanggan dan rekomendasi produk berbasis Machine Learning. Analisis perilaku pengguna dan tingkatkan engagement dengan rekomendasi yang tepat sasaran.</p>
+          <p className="hero-subtitle">
+            Platform manajemen pelanggan dan rekomendasi produk berbasis Machine Learning. 
+            Analisis perilaku pengguna dan tingkatkan engagement dengan rekomendasi yang tepat sasaran.
+          </p>
           <div className="hero-actions">
-            <Link to="/login" className="btn-primary">🔐 Login Admin</Link>
+            <Link to="/login" className="btn-primary">
+              🔐 Login Admin
+            </Link>
           </div>
         </div>
         <div className="hero-visual" aria-hidden="true">

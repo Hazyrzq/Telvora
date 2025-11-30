@@ -1,114 +1,279 @@
-/* How It Works Section */
+/* Import Google Fonts - Rajdhani & Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* ==========================
+   Variabel Warna (Diambil dari AnalyticsFeatures.css)
+   ========================== */
+:root {
+  --bg-dark: #0a1f1a;
+  --cyan-primary: #00ffcc;
+  --cyan-dark: #00ddaa;
+  --cyan-glow: rgba(0, 255, 204, 0.3);
+  --text-primary: #ffffff;
+  --text-secondary: #e0f5ee;
+  --text-muted: #a8d5c3;
+  --border-color: rgba(0, 255, 204, 0.15);
+  --card-bg: rgba(20, 35, 30, 0.95); /* Background untuk kartu */
+  --card-hover-bg: rgba(25, 40, 35, 0.95); /* Background saat hover */
+}
+
+
+/* ==========================
+   TELVORA Analytics Steps Section
+   ========================== */
+
 .analytics-steps {
-  background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+  /* Menggunakan warna latar belakang utama dan padding dari AnalyticsFeatures */
+  background: var(--bg-dark); 
   padding: 80px 20px;
-  border-top: 1px solid #e9ecef;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Garis Atas Tipis (Dari AnalyticsFeatures::before) */
+.analytics-steps::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan-primary), transparent);
+  opacity: 0.3;
+  pointer-events: none; /* Tambahkan ini agar tidak mengganggu interaksi */
+}
+
+/* Background Grid Effect (Dari AnalyticsFeatures::after) */
+.analytics-steps::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(rgba(0, 255, 204, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 204, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none;
+  opacity: 0.3;
 }
 
 .analytics-steps .container {
   max-width: 1200px;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
 }
 
+/* Section Title (Menyesuaikan dengan .section-header h2 di AnalyticsFeatures) */
 .analytics-steps h2 {
-  font-size: 36px;
-  font-weight: 800;
-  margin: 0 0 48px 0;
-  color: #1a1a1a;
+  font-size: 40px;
+  font-weight: 700; /* Disesuaikan ke 700 */
+  color: var(--text-primary); /* Warna teks utama */
+  margin: 0 0 60px 0;
   text-align: center;
+  font-family: 'Rajdhani', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 30px var(--cyan-glow); /* Efek glow yang sama */
+  /* Menghapus @keyframes fadeInDown karena tidak ada di AnalyticsFeatures.css */
 }
 
+
+/* Steps Grid */
 .steps-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 28px;
+  position: relative;
 }
 
+/* Step Item (Menyesuaikan dengan .feature-card) */
 .step-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  background: white;
-  border: 1px solid #e9ecef;
-  border-radius: 12px;
-  padding: 32px 24px;
-  transition: all 0.3s ease;
+  background: var(--card-bg); /* Warna latar belakang kartu */
+  border: 1px solid var(--border-color); /* Warna border default */
+  border-radius: 16px;
+  padding: 40px 28px;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
+  overflow: hidden;
+  cursor: pointer; /* Menambahkan cursor pointer */
+  /* Menghapus animation: fadeInUp, dll. untuk konsistensi */
 }
 
+/* Garis Atas Saat Hover (Dari .feature-card::before) */
+.step-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cyan-primary), transparent);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+/* Hover Effect (Dari .feature-card:hover) */
 .step-item:hover {
-  border-color: #0066cc;
-  box-shadow: 0 8px 24px rgba(0, 102, 204, 0.12);
-  transform: translateY(-4px);
+  border-color: var(--cyan-primary); /* Warna border saat hover */
+  box-shadow: 
+    0 8px 32px rgba(0, 255, 204, 0.15),
+    inset 0 1px 0 rgba(0, 255, 204, 0.1);
+  transform: translateY(-4px); /* Efek naik sedikit */
+  background: var(--card-hover-bg); /* Warna latar belakang saat hover */
 }
 
+.step-item:hover::before {
+  opacity: 1; /* Garis atas muncul saat hover */
+}
+
+/* Menghapus .step-item::after (Corner Accent) untuk konsistensi */
+.step-item::after {
+    /* Mengganti fungsi: Memastikan grid background effect yang ada di atas step card terhapus */
+    content: none;
+}
+
+
+/* Step Number (Menyesuaikan gaya icon/nomor dengan efek glow) */
 .step-no {
-  width: 48px;
-  height: 48px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #0066cc, #3385d6);
-  color: #fff;
+  /* Menggunakan gaya background dan border icon dari AnalyticsFeatures */
+  background: rgba(0, 255, 204, 0.08); 
+  border: 1px solid var(--border-color); 
+  color: var(--cyan-primary); /* Warna nomor */
   display: flex;
   align-items: center;
   justify-content: center;
+  font-weight: 700; /* Disesuaikan ke 700 */
+  font-size: 28px;
+  margin-bottom: 20px;
+  box-shadow: none; /* Reset shadow default */
+  font-family: 'Rajdhani', sans-serif;
+  transition: all 0.4s ease;
+  position: relative;
+  z-index: 2;
+}
+
+/* Hover Step Number (Dari .feature-card:hover .feature-icon) */
+.step-item:hover .step-no {
+  background: rgba(0, 255, 204, 0.15);
+  border-color: var(--cyan-primary);
+  box-shadow: 0 0 24px var(--cyan-glow); /* Efek glow */
+  transform: scale(1.05); /* Efek scale */
+  color: var(--cyan-primary); /* Memastikan warna tetap sama */
+}
+
+/* Menghapus Pulse Ring Effect (Tidak ada di AnalyticsFeatures) */
+.step-no::before {
+  content: none;
+}
+
+/* Step Text Title (Menyesuaikan dengan .feature-content h3) */
+.step-item h3 {
+  font-size: 18px;
   font-weight: 700;
-  font-size: 20px;
-  margin-bottom: 16px;
-  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+  color: var(--text-primary);
+  margin: 0 0 12px 0;
+  font-family: 'Rajdhani', sans-serif;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: color 0.3s ease;
+  position: relative;
+  z-index: 2;
 }
 
+.step-item:hover h3 {
+  color: var(--cyan-primary);
+  text-shadow: 0 0 10px var(--cyan-glow); /* Efek glow */
+}
+
+/* Step Text Paragraph (Menyesuaikan dengan .feature-content p) */
 .step-text {
-  color: #1a1a1a;
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1.6;
+  font-size: 14px;
+  color: var(--text-muted); /* Warna teks muted */
+  margin: 0;
+  line-height: 1.7;
+  font-family: 'Poppins', sans-serif;
+  transition: color 0.3s ease;
+  position: relative;
+  z-index: 2;
 }
 
-/* Connecting lines between steps (desktop only) */
+.step-item:hover .step-text {
+  color: var(--text-secondary); /* Warna teks sekunder saat hover */
+}
+
+
+/* Menghapus Connecting Lines (Desktop) karena konsepnya berbeda dari Feature Cards */
 @media (min-width: 769px) {
-  .steps-grid {
-    position: relative;
+  .step-item:not(:last-child)::after { content: none; }
+  .step-item:not(:last-child)::before { content: none; }
+  /* Override hover sebelum karena di atas sudah diatur untuk garis atas */
+}
+
+
+/* Responsive (Menyesuaikan angka dari AnalyticsFeatures.css) */
+@media (max-width: 768px) {
+  .analytics-steps {
+    padding: 60px 16px;
   }
 
-  .step-item:not(:last-child)::after {
-    content: '';
-    position: absolute;
-    top: 24px;
-    left: 100%;
-    width: 24px;
-    height: 2px;
-    background: linear-gradient(90deg, #0066cc, transparent);
-    transform: translateX(0);
+  .analytics-steps h2 {
+    font-size: 32px;
+    margin-bottom: 40px;
+    letter-spacing: 1px;
+  }
+
+  .steps-grid {
+    gap: 20px;
+    grid-template-columns: 1fr;
+  }
+
+  .step-item {
+    padding: 24px;
+  }
+
+  .step-no {
+    width: 56px;
+    height: 56px;
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+
+  .step-item h3 {
+    font-size: 16px;
+  }
+
+  .step-text {
+    font-size: 13px;
   }
 }
 
-/* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 480px) {
   .analytics-steps {
     padding: 48px 16px;
   }
 
   .analytics-steps h2 {
     font-size: 28px;
-    margin-bottom: 32px;
-  }
-
-  .steps-grid {
-    gap: 16px;
   }
 
   .step-item {
-    padding: 24px 20px;
+    padding: 20px;
   }
 
   .step-no {
-    width: 40px;
-    height: 40px;
-    font-size: 18px;
-  }
-
-  .step-text {
-    font-size: 14px;
+    width: 52px;
+    height: 52px;
+    font-size: 22px;
   }
 }

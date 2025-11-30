@@ -8,7 +8,7 @@ const Footer = () => {
       <div className="footer-container">
         <div className="footer-content">
           <div className="footer-brand">
-            <h3 className="footer-logo">TELMI</h3>
+            <h3 className="footer-logo">TELVORA</h3>
             <p className="footer-tagline">Platform analitik internal untuk mengelola pelanggan dan rekomendasi berbasis AI.</p>
           </div>
           <div className="footer-links">
@@ -19,7 +19,7 @@ const Footer = () => {
         </div>
         <div className="footer-divider"></div>
         <div className="footer-bottom">
-          <p>&copy; {new Date().getFullYear()} TELMI. Semua hak dilindungi.</p>
+          <p>&copy; {new Date().getFullYear()} TELVORA. Semua hak dilindungi.</p>
         </div>
       </div>
     </footer>

@@ -1,11 +1,25 @@
+/* Variabel CSS harus didefinisikan di file root (misalnya app.css) */
+/* Diasumsikan:
+ * --bg-dark: #0a1f1a;
+ * --cyan-primary: #00ffcc;
+ * --text-primary: #ffffff;
+ * --text-muted: #a8d5c3;
+ * --border-color: rgba(0, 255, 204, 0.15);
+ * --cyan-glow: rgba(0, 255, 204, 0.3);
+ */
+
 .header {
-  background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  /* PERBAIKAN: Background diubah menjadi Dark Teal Transparan */
+  background: rgba(10, 31, 26, 0.95); /* Sedikit lebih transparan dari --bg-dark */
+  /* PERBAIKAN: Shadow diubah menjadi Cyan Glow */
+  box-shadow: 0 2px 12px rgba(0, 255, 204, 0.15); 
   position: sticky;
   top: 0;
   z-index: 1000;
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid #f0f0f0;
+  /* Jaga blur, tapi background-nya gelap */
+  backdrop-filter: blur(12px); 
+  /* PERBAIKAN: Border diubah menjadi Cyan Muted */
+  border-bottom: 1px solid var(--border-color);
 }
 
 .navbar {
@@ -32,34 +46,57 @@
   position: relative;
 }
 
-.logo-icon {
-  font-size: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #0066cc, #3385d6);
-  border-radius: 10px;
-  color: white;
-  font-weight: 600;
-}
+/* ========================
+   MODIFIKASI: Agar Ikon Menonjol
+   ======================== */
 
-.logo-text {
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  background: linear-gradient(135deg, #0066cc, #0052a3);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
+   .logo-icon {
+    font-size: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    /* PERUBAHAN: Background diubah menjadi Cyan Glow Transparan */
+    background: rgba(0, 255, 204, 0.1); 
+    border: 1px solid var(--cyan-primary); /* Tambahkan border Cyan */
+    border-radius: 10px;
+    /* PERUBAHAN: Warna ikon diubah ke Cyan Primary Penuh */
+    color: var(--cyan-primary); 
+    font-weight: 600;
+    /* PERUBAHAN: Glow lebih kuat */
+    box-shadow: 0 0 20px var(--cyan-glow); 
+    transition: all 0.3s ease;
+  }
+  
+  .logo-text {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    /* PERUBAHAN: Gradient masih digunakan, tetapi lebih muted (gelap) 
+       Kita akan menggunakan gradient cyan ke teal gelap */
+    background: linear-gradient(135deg, var(--cyan-primary), #0a1f1a); 
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    /* Warna fallback jika gradient tidak didukung */
+    color: var(--text-primary); 
+    opacity: 0.8; /* Meredupkan sedikit teks */
+  }
+  
+  /* Modifikasi Hover agar Ikon Bereaksi */
+  .logo-container:hover .logo-icon {
+    background: var(--cyan-primary);
+    color: var(--bg-dark); /* Ikon berubah menjadi gelap saat hover */
+    box-shadow: 0 0 30px var(--cyan-glow);
+    transform: scale(1.1);
+  }
+  
+  .logo-container:hover .logo-text {
+    opacity: 1; /* Teks menjadi penuh saat hover */
+  }
 
-.logo-container:hover {
-  transform: scale(1.05);
-}
-
-/* Navigation Menu */
+/* Navigation Menu (Desktop) */
 .nav-menu {
   list-style: none;
   display: flex;
@@ -76,7 +113,8 @@
 .nav-link {
   font-size: 14px;
   font-weight: 600;
-  color: #1a1a1a;
+  /* PERBAIKAN: Warna link diubah menjadi putih */
+  color: var(--text-primary); 
   text-decoration: none;
   transition: all 0.3s ease;
   padding: 10px 16px;
@@ -91,15 +129,18 @@
   left: 16px;
   right: 16px;
   height: 2px;
-  background: linear-gradient(90deg, #0066cc, #3385d6);
+  /* PERBAIKAN: Gradient Cyan */
+  background: linear-gradient(90deg, var(--cyan-primary), #00ddaa);
   border-radius: 2px;
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
 .nav-link:hover {
-  background: rgba(0, 102, 204, 0.05);
-  color: #0066cc;
+  /* PERBAIKAN: Background hover Cyan transparan */
+  background: rgba(0, 255, 204, 0.08);
+  /* PERBAIKAN: Warna hover Cyan */
+  color: var(--cyan-primary); 
 }
 
 .nav-link:hover::after {
@@ -121,346 +162,130 @@
 .hamburger {
   width: 24px;
   height: 2px;
-  background: #0066cc;
+  /* PERBAIKAN: Warna Hamburger Cyan */
+  background: var(--cyan-primary); 
   border-radius: 2px;
   transition: all 0.3s ease;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .nav-container {
-    padding: 0 16px;
-  }
-
-  .logo-container {
-    gap: 8px;
-  }
-
-  .logo-icon {
-    width: 36px;
-    height: 36px;
-    font-size: 24px;
-  }
-
-  .logo-text {
-    font-size: 18px;
-  }
-
-  .nav-menu {
-    gap: 16px;
-  }
-
-  .nav-link {
-    padding: 8px 12px;
-    font-size: 13px;
-  }
-}
-
-.menu-overlay {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 999;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-
-.menu-overlay.active {
-  opacity: 1;
-  pointer-events: all;
-}
-
-.nav-menu {
-  display: flex;
-  gap: 32px;
-  align-items: center;
-}
-
-.nav-item {
-  font-size: 15px;
-  font-weight: 600;
-  color: #333;
-  position: relative;
-  padding: 8px 0;
-  transition: color 0.3s ease;
-}
-
-.nav-item a {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.nav-item::after {
-  content: '';
-  position: absolute;
-  bottom: -4px;
-  left: 0;
-  width: 0;
-  height: 2px;
-  background: linear-gradient(135deg, #005c97, #363795);
-  transition: width 0.3s ease;
-}
-
-.nav-item:hover::after,
-.nav-item.active::after {
-  width: 100%;
-}
-
-.nav-item:hover {
-  color: #005c97;
-}
-
-.nav-item.active a {
-  color: #005c97;
-}
-
-.nav-item.dropdown {
-  position: relative;
-}
-
-.dropdown-arrow {
-  font-size: 14px;
-  transition: transform 0.3s;
-}
-
-.nav-item.dropdown:hover .dropdown-arrow {
-  transform: rotate(180deg);
-}
-
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #fff;
-  min-width: 220px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
-  padding: 12px 0;
-  margin-top: 16px;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(10px) translateX(-50%);
-  transition: all 0.3s ease;
-  z-index: 1000;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.dropdown-menu.active {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0) translateX(-50%);
-}
-
-.dropdown-menu li {
-  list-style: none;
-}
-
-.dropdown-menu a {
-  display: block;
-  padding: 12px 24px;
-  color: #333;
-  font-size: 15px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.dropdown-menu a:hover {
-  background: #f5f8fc;
-  color: #005c97;
-  padding-left: 28px;
-}
-
-.search-bar {
-  display: flex;
-  align-items: center;
-  background: #f5f8fc;
-  border-radius: 20px;
-  padding: 6px 12px;
-  width: 200px;
-  transition: all 0.3s ease;
-}
-
-.search-bar:focus-within {
-  background: #fff;
-  box-shadow: 0 0 0 2px rgba(0, 92, 151, 0.2);
-  width: 240px;
-}
-
-.search-icon {
-  color: #777;
-  margin-right: 8px;
-}
-
-.search-bar input {
-  border: none;
-  background: transparent;
-  outline: none;
-  width: 100%;
-  font-size: 14px;
-  color: #333;
-}
-
-.cms-link {
-  margin-left: 16px;
-}
-
-.cms-button {
-  background: linear-gradient(135deg, #005c97, #363795);
-  color: #fff !important;
-  padding: 10px 24px;
-  border-radius: 20px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 92, 151, 0.2);
-}
-
-.cms-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 92, 151, 0.3);
-}
-
-@media (max-width: 1024px) {
-  .nav-menu {
-    gap: 24px;
-  }
-  .search-bar {
-    width: 160px;
-  }
-}
-
+/* Responsive (Penyesuaian di Mobile) */
 @media (max-width: 968px) {
-  .mobile-menu-toggle {
-    display: flex;
-    font-size: 28px;
-    color: #333;
-  }
-
-  .menu-overlay {
-    display: block;
-  }
-
   .nav-menu {
-    position: fixed;
-    top: 0;
-    right: -100%;
-    width: 320px;
-    height: 100vh;
-    background: #fff;
-    flex-direction: column;
-    align-items: stretch;
-    padding: 80px 0 30px;
-    gap: 0;
-    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
-    transition: right 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    z-index: 1000;
-    overflow-y: auto;
-  }
-
-  .nav-menu.active {
-    right: 0;
+    /* PERBAIKAN: Sidebar menu background gelap */
+    background: var(--bg-dark); 
+    box-shadow: -4px 0 20px rgba(0, 255, 204, 0.1);
   }
 
   .nav-item {
-    width: 100%;
-    padding: 0;
-    border-bottom: 1px solid #f0f0f0;
-    font-size: 16px;
+    border-bottom: 1px solid var(--border-color);
   }
   
   .nav-item a {
-    padding: 18px 30px;
-    display: flex;
-    justify-content: space-between;
-  }
-
-  .nav-item:last-child {
-    border-bottom: none;
-  }
-
-  .nav-item::after {
-    display: none;
+    /* PERBAIKAN: Warna link putih saat di mobile */
+    color: var(--text-primary); 
   }
 
   .nav-item:hover {
-    background: #f5f8fc;
+    /* PERBAIKAN: Hover background Cyan transparan */
+    background: rgba(0, 255, 204, 0.08); 
   }
   
   .nav-item > a:hover {
-    color: #005c97;
+    /* PERBAIKAN: Hover link color Cyan */
+    color: var(--cyan-primary); 
   }
 
   .dropdown-menu {
-    position: static;
-    opacity: 1;
-    visibility: visible;
-    transform: none;
-    box-shadow: none;
-    background: #f5f8fc;
-    border-radius: 0;
-    margin: 0;
-    padding-left: 30px;
-    display: none;
+    /* PERBAIKAN: Dropdown background gelap */
+    background: rgba(0, 255, 204, 0.05); 
   }
   
-  .dropdown-menu.active {
-    display: block;
-  }
-
   .dropdown-menu a {
-    color: #555;
-    padding: 14px 30px;
+    /* PERBAIKAN: Dropdown link color muted */
+    color: var(--text-muted); 
   }
 
   .dropdown-menu a:hover {
-    color: #005c97;
-    background: #eaf2fa;
-  }
-  
-  .search-bar {
-    margin: 20px 30px;
-    width: auto;
-  }
-
-  .cms-link {
-    margin: 20px 30px;
-    padding: 0;
-  }
-
-  .cms-button {
-    width: 100%;
-    text-align: center;
-    padding: 14px;
-    border-radius: 8px;
-  }
-
-  .logo {
-    font-size: 28px;
+    /* PERBAIKAN: Dropdown hover background & text color */
+    color: var(--cyan-primary);
+    background: rgba(0, 255, 204, 0.1); 
   }
 }
 
-@media (max-width: 640px) {
-  .partner-logos {
-    gap: 16px;
-    font-size: 11px;
-  }
+/* Penyesuaian Gaya Lainnya */
 
-  .nav-container {
-    padding: 15px 20px;
-  }
+/* Nav Item (Desktop) - Mengganti warna link sekunder */
+.nav-item {
+  color: var(--text-primary);
+}
 
-  .logo {
-    font-size: 24px;
-  }
+.nav-item a {
+  /* PERBAIKAN: Warna teks tetap Putih untuk desktop */
+  color: var(--text-primary); 
+}
+
+.nav-item::after {
+  /* PERBAIKAN: Warna garis bawah hover Cyan */
+  background: linear-gradient(135deg, var(--cyan-primary), #00ddaa);
+}
+
+.nav-item:hover {
+  /* PERBAIKAN: Warna hover link Cyan */
+  color: var(--cyan-primary);
+}
+
+.nav-item.active a {
+  /* PERBAIKAN: Warna link aktif Cyan */
+  color: var(--cyan-primary);
 }
 
 
+/* Dropdown Menu (Desktop) - Mengganti warna terang */
+.dropdown-menu {
+  background: var(--bg-dark);
+  box-shadow: 0 8px 24px rgba(0, 255, 204, 0.15);
+  border: 1px solid var(--border-color);
+}
 
+.dropdown-menu a {
+  color: var(--text-primary);
+}
 
+.dropdown-menu a:hover {
+  background: rgba(0, 255, 204, 0.1);
+  color: var(--cyan-primary);
+}
 
+/* Search Bar */
+.search-bar {
+  /* PERBAIKAN: Background search bar gelap */
+  background: rgba(0, 255, 204, 0.05); 
+}
+
+.search-bar:focus-within {
+  /* PERBAIKAN: Box shadow fokus Cyan */
+  background: var(--bg-dark);
+  box-shadow: 0 0 0 2px var(--cyan-primary); 
+}
+
+.search-icon {
+  /* PERBAIKAN: Ikon search color muted */
+  color: var(--text-muted); 
+}
+
+.search-bar input {
+  /* PERBAIKAN: Input text color putih */
+  color: var(--text-primary); 
+}
+
+/* CMS Button */
+.cms-button {
+  /* PERBAIKAN: Gradient Cyan */
+  background: linear-gradient(135deg, var(--cyan-primary), #00ddaa);
+  color: var(--bg-dark) !important;
+  box-shadow: 0 2px 8px rgba(0, 255, 204, 0.2);
+}
+
+.cms-button:hover {
+  box-shadow: 0 4px 12px rgba(0, 255, 204, 0.4);
+}
