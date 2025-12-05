@@ -1,5 +1,4 @@
 import React from 'react'
-import '../styles/Admin/DatasetPreview.css'
 
 const sampleRows = [
   {
@@ -21,45 +20,45 @@ const sampleRows = [
 
 const DatasetPreview = () => {
   return (
-    <div className="dataset-preview">
-      <div className="dataset-header">
-        <h3>Dataset Preview (UI-only)</h3>
-        <p>Contoh kolom dari CSV sample — UI hanya menampilkan preview, tidak melakukan koneksi database.</p>
+    <div className="max-w-full overflow-auto rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold text-gray-900">Dataset Preview (UI-only)</h3>
+        <p className="mt-1 text-sm text-gray-600">Contoh kolom dari CSV sample — preview saja, tidak melakukan koneksi database.</p>
       </div>
 
-      <div className="dataset-table-wrap">
-        <table className="dataset-table">
-          <thead>
-            <tr>
-              <th>customer_id</th>
-              <th>plan_type</th>
-              <th>device_brand</th>
-              <th>avg_data_usage_gb</th>
-              <th>pct_video_usage</th>
-              <th>avg_call_duration</th>
-              <th>sms_freq</th>
-              <th>monthly_spend</th>
-              <th>topup_freq</th>
-              <th>travel_score</th>
-              <th>complaint_count</th>
-              <th>target_offer</th>
+      <div className="w-full overflow-x-auto">
+        <table className="min-w-[900px] w-full table-auto">
+          <thead className="bg-gray-50">
+            <tr className="text-left text-xs font-semibold text-gray-700">
+              <th className="px-3 py-2">customer_id</th>
+              <th className="px-3 py-2">plan_type</th>
+              <th className="px-3 py-2">device_brand</th>
+              <th className="px-3 py-2">avg_data_usage_gb</th>
+              <th className="px-3 py-2">pct_video_usage</th>
+              <th className="px-3 py-2">avg_call_duration</th>
+              <th className="px-3 py-2">sms_freq</th>
+              <th className="px-3 py-2">monthly_spend</th>
+              <th className="px-3 py-2">topup_freq</th>
+              <th className="px-3 py-2">travel_score</th>
+              <th className="px-3 py-2">complaint_count</th>
+              <th className="px-3 py-2">target_offer</th>
             </tr>
           </thead>
           <tbody>
             {sampleRows.map((r) => (
-              <tr key={r.customer_id}>
-                <td>{r.customer_id}</td>
-                <td>{r.plan_type}</td>
-                <td>{r.device_brand}</td>
-                <td>{r.avg_data_usage_gb}</td>
-                <td>{r.pct_video_usage}</td>
-                <td>{r.avg_call_duration}</td>
-                <td>{r.sms_freq}</td>
-                <td>{r.monthly_spend}</td>
-                <td>{r.topup_freq}</td>
-                <td>{r.travel_score}</td>
-                <td>{r.complaint_count}</td>
-                <td>{r.target_offer}</td>
+              <tr key={r.customer_id} className="border-t border-gray-100 hover:bg-gray-50">
+                <td className="px-3 py-2 text-sm text-gray-800">{r.customer_id}</td>
+                <td className="px-3 py-2 text-sm text-gray-800">{r.plan_type}</td>
+                <td className="px-3 py-2 text-sm text-gray-800">{r.device_brand}</td>
+                <td className="px-3 py-2 text-sm text-gray-800">{r.avg_data_usage_gb}</td>
+                <td className="px-3 py-2 text-sm text-gray-800">{r.pct_video_usage}</td>
+                <td className="px-3 py-2 text-sm text-gray-800">{r.avg_call_duration}</td>
+                <td className="px-3 py-2 text-sm text-gray-800">{r.sms_freq}</td>
+                <td className="px-3 py-2 text-sm text-gray-800">{r.monthly_spend}</td>
+                <td className="px-3 py-2 text-sm text-gray-800">{r.topup_freq}</td>
+                <td className="px-3 py-2 text-sm text-gray-800">{r.travel_score}</td>
+                <td className="px-3 py-2 text-sm text-gray-800">{r.complaint_count}</td>
+                <td className="px-3 py-2 text-sm text-gray-800">{r.target_offer}</td>
               </tr>
             ))}
           </tbody>

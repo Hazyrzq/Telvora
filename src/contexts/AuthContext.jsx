@@ -23,13 +23,45 @@ export const AuthProvider = ({ children }) => {
 
     init()
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
+    let authListener = null
+    try {
+      const authSubscription = supabase.auth.onAuthStateChange((_event, session) => {
+        if (mounted) {
+          setUser(session?.user ?? null)
+        }
+      })
+      
+      // Handle different return formats from Supabase
+      // Supabase v2 returns: { data: { subscription }, error }
+      // Stub returns: { unsubscribe: () => {} }
+      if (authSubscription) {
+        if (authSubscription.data?.subscription) {
+          authListener = authSubscription.data.subscription
+        } else if (authSubscription.subscription) {
+          authListener = authSubscription.subscription
+        } else if (authSubscription.unsubscribe && typeof authSubscription.unsubscribe === 'function') {
+          authListener = authSubscription
+        } else if (typeof authSubscription === 'function') {
+          authListener = { unsubscribe: authSubscription }
+        }
+      }
+    } catch (err) {
+      console.warn('Error setting up auth listener:', err)
+    }
 
     return () => {
       mounted = false
-      listener?.unsubscribe()
+      try {
+        if (authListener) {
+          if (typeof authListener.unsubscribe === 'function') {
+            authListener.unsubscribe()
+          } else if (typeof authListener === 'function') {
+            authListener()
+          }
+        }
+      } catch (err) {
+        console.warn('Error unsubscribing auth listener:', err)
+      }
     }
   }, [])
 

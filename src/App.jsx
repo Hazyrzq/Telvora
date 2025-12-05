@@ -8,19 +8,22 @@ import ProductLab from './pages/Admin/ProductLab'
 import UserProfile from './pages/Admin/UserProfile'
 import Analytic from './pages/Admin/Analytic'
 import Login from './pages/Login'
+import TentangSistem from './pages/TentangSistem'
 import HomeLayout from './layouts/HomeLayout'
 import { AuthProvider } from './contexts/AuthContext'
 import RequireAuth from './components/RequireAuth'
-import './styles/App.css'
+import ScrollToTop from './components/ScrollToTop'
 
 function App() {
   return (
     <AuthProvider>
       <Router>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<HomeLayout />}>
             <Route index element={<Home />} />
             <Route path="login" element={<Login />} />
+            <Route path="tentang-sistem" element={<TentangSistem />} />
           </Route>
 
           <Route

@@ -1,176 +1,114 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useLocation, Outlet } from 'react-router-dom'
-import '../styles/Admin/AdminLayout.css'
 import { useAuth } from '../contexts/AuthContext'
+import { Menu, X, ChevronDown, LogOut, Home, Users, Package, BarChart3, User } from 'lucide-react'
 
 const AdminLayout = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    // Set initial state based on screen size
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 768
+    }
+    return true
+  })
   const [productDropdownOpen, setProductDropdownOpen] = useState(false)
+  const { user, signOut } = useAuth()
   const location = useLocation()
 
+  // Handle sidebar state on resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setSidebarOpen(true)
+      } else {
+        setSidebarOpen(false)
+      }
+    }
+    
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // Close sidebar on mobile when clicking a link
+  const handleLinkClick = () => {
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false)
+    }
+  }
+
   const menuItems = [
-    { 
-      path: '/admin', 
-      icon: 'home', 
-      label: 'Dashboard', 
-      exact: true 
-    },
-    { 
-      path: '/admin/customers', 
-      icon: 'users', 
-      label: 'Pelanggan' 
-    },
-    { 
+    { path: '/admin', icon: Home, label: 'Dashboard', exact: true },
+    { path: '/admin/customers', icon: Users, label: 'Pelanggan' },
+    {
       type: 'dropdown',
-      icon: 'package', 
-      label: 'Product',
+      icon: Package,
+      label: 'Produk',
       submenu: [
-        { path: '/admin/packages', label: 'Product Management' },
+        { path: '/admin/packages', label: 'Manajemen Produk' },
         { path: '/admin/product-lab', label: 'Product Lab' }
       ]
     },
-    { 
-      path: '/admin/recommendations', 
-      icon: 'chart', 
-      label: 'Analitik' 
-    }
+    { path: '/admin/recommendations', icon: BarChart3, label: 'Analitik' }
   ]
 
   const isActive = (path, exact = false) => {
-    if (exact) {
-      return location.pathname === path
-    }
+    if (exact) return location.pathname === path
     return location.pathname.startsWith(path)
   }
 
-  const isDropdownActive = (submenu) => {
-    return submenu.some(item => location.pathname.startsWith(item.path))
-  }
+  const isDropdownActive = (submenu) => submenu.some(item => location.pathname.startsWith(item.path))
 
-  // SVG Icons Component
-  const Icon = ({ name, className = "" }) => {
-    const icons = {
-      home: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-          <polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
-      ),
-      users: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-      ),
-      package: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/>
-          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-          <line x1="12" y1="22.08" x2="12" y2="12"/>
-        </svg>
-      ),
-      chart: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="18" y1="20" x2="18" y2="10"/>
-          <line x1="12" y1="20" x2="12" y2="4"/>
-          <line x1="6" y1="20" x2="6" y2="14"/>
-        </svg>
-      ),
-      arrowLeft: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="19" y1="12" x2="5" y2="12"/>
-          <polyline points="12 19 5 12 12 5"/>
-        </svg>
-      ),
-      arrowRight: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="5" y1="12" x2="19" y2="12"/>
-          <polyline points="12 5 19 12 12 19"/>
-        </svg>
-      ),
-      chevronDown: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="6 9 12 15 18 9"/>
-        </svg>
-      ),
-      user: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-          <circle cx="12" cy="7" r="4"/>
-        </svg>
-      ),
-      logout: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-          <polyline points="16 17 21 12 16 7"/>
-          <line x1="21" y1="12" x2="9" y2="12"/>
-        </svg>
-      ),
-      signal: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-        </svg>
-      )
-    }
-
-    return (
-      <span className={`icon ${className}`}>
-        {icons[name] || icons.home}
-      </span>
-    )
+  const handleLogout = async () => {
+    await signOut()
   }
 
   return (
-    <div className="admin-layout">
-      <aside className={`admin-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
-        <div className="sidebar-header">
-          <div className="sidebar-logo">
-            <div className="logo-icon-wrapper">
-              <Icon name="signal" className="logo-icon-svg" />
+    <div className="flex h-screen bg-slate-950 overflow-hidden">
+      {/* Sidebar */}
+      <aside className={
+        `fixed inset-y-0 left-0 z-40 w-64 bg-slate-900 border-r border-slate-800 shadow-xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] md:static md:translate-x-0 ` +
+        (sidebarOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 md:translate-x-0 md:opacity-100')
+      }>
+        <div className="flex h-full flex-col">
+          {/* Logo/Brand */}
+          <div className="flex items-center gap-3 border-b border-slate-800 p-4 h-16 flex-shrink-0">
+            <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/20">
+              <svg width="20" height="20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 50C25 20 45 80 60 50C70 30 75 50 80 50" stroke="white" strokeWidth="8" strokeLinecap="round"/>
+                <circle cx="85" cy="50" r="10" stroke="white" strokeWidth="8" />
+              </svg>
             </div>
-            <span className="logo-text">TELVORA</span>
+            <div className="flex flex-col">
+              <div className="text-sm font-bold text-white leading-tight">Telvora</div>
+              <div className="text-xs text-slate-400 leading-tight">Admin Panel</div>
+            </div>
           </div>
-          <button 
-            className="sidebar-toggle"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            aria-label={sidebarOpen ? 'Tutup sidebar' : 'Buka sidebar'}
-          >
-            <Icon name={sidebarOpen ? 'arrowLeft' : 'arrowRight'} />
-          </button>
-        </div>
 
-        <nav className="sidebar-nav">
-          <div className="nav-section">
-            <div className="nav-section-title">Menu Utama</div>
-            {menuItems.map((item, index) => {
+          {/* Navigation */}
+          <nav className="flex flex-1 flex-col p-4 space-y-1.5 overflow-y-auto overflow-x-hidden">
+            {menuItems.map((item, idx) => {
               if (item.type === 'dropdown') {
-                const dropdownActive = isDropdownActive(item.submenu)
+                const active = isDropdownActive(item.submenu)
                 return (
-                  <div 
-                    key={index} 
-                    className={`nav-item-dropdown ${productDropdownOpen ? 'open' : ''}`}
-                  >
+                  <div key={idx}>
                     <button
-                      className={`nav-dropdown-toggle ${dropdownActive ? 'active' : ''}`}
                       onClick={() => setProductDropdownOpen(!productDropdownOpen)}
-                    >
-                      <div className="nav-dropdown-content">
-                        <Icon name={item.icon} className="nav-icon" />
-                        <span className="nav-text">{item.label}</span>
+                      className={`w-full flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] ${active ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <item.icon size={18} className="flex-shrink-0" />
+                        <span className="truncate">{item.label}</span>
                       </div>
-                      <Icon name="chevronDown" className="nav-chevron" />
+                      <ChevronDown size={16} className={`flex-shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${productDropdownOpen ? 'rotate-180' : 'rotate-0'}`} />
                     </button>
-                    <div className="nav-submenu">
-                      {item.submenu.map((subItem, subIndex) => (
+
+                    <div className={`mt-1.5 ml-9 flex flex-col gap-1 overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${productDropdownOpen ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
+                      {item.submenu.map((sub, sidx) => (
                         <Link
-                          key={subIndex}
-                          to={subItem.path}
-                          className={`nav-submenu-item ${isActive(subItem.path) ? 'active' : ''}`}
-                        >
-                          <span>{subItem.label}</span>
+                          key={sidx}
+                          to={sub.path}
+                          onClick={handleLinkClick}
+                          className={`rounded-lg px-3 py-2 text-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${isActive(sub.path) ? 'bg-cyan-500/20 text-cyan-400 font-semibold border border-cyan-500/30' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
+                          {sub.label}
                         </Link>
                       ))}
                     </div>
@@ -182,82 +120,85 @@ const AdminLayout = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`nav-link ${isActive(item.path, item.exact) ? 'active' : ''}`}
-                >
-                  <Icon name={item.icon} className="nav-icon" />
-                  <span className="nav-text">{item.label}</span>
+                  onClick={handleLinkClick}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] ${isActive(item.path, item.exact) ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
+                  <item.icon size={18} className="flex-shrink-0" />
+                  <span className="truncate">{item.label}</span>
                 </Link>
               )
             })}
-          </div>
-        </nav>
+          </nav>
 
-        <div className="sidebar-footer">
-          <Link to="/" className="back-to-site">
-            <Icon name="arrowLeft" className="back-icon" />
-            <span className="back-text">Kembali ke Situs</span>
-          </Link>
+          {/* Footer Actions */}
+          <div className="border-t border-slate-800 p-3 flex flex-col gap-1.5 flex-shrink-0">
+            <button 
+              onClick={() => {
+                handleLogout()
+                handleLinkClick()
+              }} 
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-300 hover:bg-red-500/20 hover:text-red-400 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            >
+              <LogOut size={18} className="flex-shrink-0" />
+              <span className="truncate">Logout</span>
+            </button>
+
+            <Link 
+              to="/" 
+              onClick={handleLinkClick}
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            >
+              <ChevronDown size={18} className="rotate-90 flex-shrink-0" />
+              <span className="truncate">Ke Situs</span>
+            </Link>
+          </div>
         </div>
       </aside>
 
-      <main className="admin-main">
-        <header className="admin-header">
-          <div className="header-left">
-            <h1>Panel Admin TELVORA</h1>
-            <div className="header-breadcrumb">
-              <span>Dashboard</span>
-              <span className="breadcrumb-separator">/</span>
-              <span>Overview</span>
+      {/* Overlay for mobile */}
+      <div 
+        className={`fixed inset-0 bg-black/50 z-30 md:hidden transition-opacity duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        onClick={() => setSidebarOpen(false)}
+      />
+
+      {/* Main content area */}
+      <div className="flex flex-1 flex-col min-w-0 md:ml-0">
+        {/* Header */}
+        <header className="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-slate-800 bg-slate-900/95 backdrop-blur-sm px-4 md:px-6 h-16 flex-shrink-0 shadow-lg">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <button 
+              onClick={() => setSidebarOpen(!sidebarOpen)} 
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] flex-shrink-0 md:hidden active:scale-95"
+            >
+              {sidebarOpen ? <X size={18} className="transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]" /> : <Menu size={18} className="transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]" />}
+            </button>
+            <div className="min-w-0">
+              <h1 className="text-base md:text-lg font-bold text-white tracking-tight">Panel Admin Telvora</h1>
+              <p className="text-xs text-slate-400 hidden sm:block">Kelola produk, pelanggan, dan analitik Anda</p>
             </div>
           </div>
-          
-          <div className="header-right">
-            <button className="notification-btn" aria-label="Notifikasi">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-              </svg>
-              <span className="notification-badge">3</span>
-            </button>
 
-            <div className="user-menu">
-              <div className="user-avatar">
-                <Icon name="user" />
+          <div className="flex items-center flex-shrink-0">
+            <div className="flex items-center gap-3 pl-4 border-l border-slate-700/50">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500 text-white shadow-md shadow-cyan-500/20 flex-shrink-0">
+                <User size={18} />
               </div>
-              <div className="user-info">
-                <AuthInfo Icon={Icon} />
+              <div className="hidden sm:block min-w-0 pr-2">
+                <div className="text-sm font-semibold text-white leading-none mb-0.5 truncate max-w-[150px]">{user?.email?.split('@')[0] || 'Admin'}</div>
+                <div className="text-xs text-slate-400 leading-none truncate">Administrator</div>
               </div>
-              <Icon name="chevronDown" className="user-dropdown-icon" />
             </div>
           </div>
         </header>
 
-        <div className="admin-content">
-          <Outlet />
-        </div>
-      </main>
+        {/* Main Content */}
+        <main className="flex-1 overflow-auto bg-slate-950">
+          <div className="w-full h-full px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 max-w-full">
+            <Outlet />
+          </div>
+        </main>
+      </div>
     </div>
   )
 }
 
 export default AdminLayout
-
-function AuthInfo({ Icon }) {
-  const { user, signOut } = useAuth()
-
-  if (!user) {
-    return (
-      <>
-        <span className="user-name">Tamu</span>
-        <span className="user-role">Belum Masuk</span>
-      </>
-    )
-  }
-
-  return (
-    <>
-      <span className="user-name">{user.email?.split('@')[0] || 'Admin'}</span>
-      <span className="user-role">Administrator</span>
-    </>
-  )
-}
