@@ -133,7 +133,7 @@ gemini_call_interval = 2  # Minimum seconds between calls
 
 
 def call_ollama_safe(prompt: str) -> str:
-    """Call Ollama local API with basic rate limiting and graceful fallbacks."""
+    """Call Ollama API (Cloud or Local) with rate limiting and graceful fallbacks."""
     global gemini_last_call_time
 
     if not OLLAMA_MODEL:
@@ -150,30 +150,57 @@ def call_ollama_safe(prompt: str) -> str:
 
         gemini_last_call_time = time.time()
 
-        # Prepare headers (include API key if available for cloud/auth endpoints)
+        # Prepare headers (include API key for cloud/auth endpoints)
         headers = {"Content-Type": "application/json"}
         if OLLAMA_API_KEY:
             headers["Authorization"] = f"Bearer {OLLAMA_API_KEY}"
 
-        resp = requests.post(
-            f"{OLLAMA_BASE_URL}/api/generate",
-            json={
+        # Detect if using Ollama Cloud (API key present) or local
+        is_cloud = OLLAMA_API_KEY and ("ollama.com" in OLLAMA_BASE_URL.lower() or "api" in OLLAMA_BASE_URL.lower())
+        
+        if is_cloud:
+            # Ollama Cloud API endpoint format (OpenAI-compatible: /v1/chat/completions)
+            base_url = OLLAMA_BASE_URL.rstrip('/')
+            if base_url.endswith('/api'):
+                endpoint = f"{base_url}/v1/chat/completions"
+            else:
+                endpoint = f"{base_url}/v1/chat/completions"
+            payload = {
+                "model": OLLAMA_MODEL,
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.7,
+            }
+            print(f"📡 Calling Ollama Cloud (OpenAI format): {endpoint}")
+        else:
+            # Local Ollama API endpoint format (uses /api/generate)
+            endpoint = f"{OLLAMA_BASE_URL.rstrip('/')}/api/generate"
+            payload = {
                 "model": OLLAMA_MODEL,
                 "prompt": prompt,
                 "stream": False,
-            },
-            headers=headers,
-            timeout=60,
-        )
+            }
+            print(f"📡 Calling Local Ollama: {endpoint}")
+
+        resp = requests.post(endpoint, json=payload, headers=headers, timeout=60)
 
         if resp.status_code != 200:
+            print(f"⚠️ Ollama API returned status {resp.status_code}: {resp.text[:200]}")
             return f"AI tidak tersedia (status {resp.status_code})"
 
         data = resp.json()
-        text = data.get("response") or data.get("output") or ""
+        
+        # Extract text based on response format
+        if is_cloud and "choices" in data:
+            # OpenAI-compatible format (cloud)
+            text = data["choices"][0]["message"]["content"] if data["choices"] else ""
+        else:
+            # Ollama format (local)
+            text = data.get("response") or data.get("output") or ""
+        
         return text if text else "AI tidak memberikan respons teks."
     except Exception as e:
         error_msg = str(e)
+        print(f"⚠️ Ollama API error: {error_msg}")
         return f"AI tidak tersedia: {error_msg[:120]}"
 
 
@@ -641,6 +668,77 @@ def simulate_product(payload: ProductSimulationRequest):
         recommendation=result['recommendation'],
         generated_at=datetime.now(timezone.utc).isoformat()
     )
+
+
+@app.get("/analytics/churn-composition")
+def get_churn_composition():
+    """Get churn bucket composition from all customers."""
+    if supabase is None:
+        raise HTTPException(status_code=503, detail='Database not configured')
+    if clf is None or label_encoder is None:
+        raise HTTPException(status_code=500, detail='Model not loaded')
+
+    # Fetch all customers with pagination
+    all_users = []
+    page = 0
+    page_size = 1000
+    has_more = True
+
+    while has_more:
+        res = supabase.table('customer_profile').select('*').range(page * page_size, (page + 1) * page_size - 1).execute()
+        if res.data and len(res.data) > 0:
+            all_users.extend(res.data)
+            page += 1
+            if len(res.data) < page_size:
+                has_more = False
+        else:
+            has_more = False
+
+    if not all_users:
+        return {"high": 0, "medium": 0, "low": 0}
+
+    # Build features DataFrame
+    df_users = pd.DataFrame(all_users)
+    numeric_features_list = [
+        'avg_data_usage_gb', 'pct_video_usage', 'avg_call_duration', 'sms_freq',
+        'monthly_spend', 'topup_freq', 'travel_score', 'complaint_count'
+    ]
+    
+    X = df_users.copy()
+    for col in numeric_features_list:
+        if col in X.columns:
+            X[col] = X[col].astype(str).str.replace(',', '.')
+            X[col] = pd.to_numeric(X[col], errors='coerce').fillna(0)
+    
+    if 'avg_call_duration' in X.columns:
+        X['avg_call_duration'] = X['avg_call_duration'].abs()
+    if 'monthly_spend' in X.columns:
+        X['monthly_spend'] = X['monthly_spend'].abs()
+    
+    for drop_col in ('customer_id', 'target_offer', 'target_encoded'):
+        if drop_col in X.columns:
+            X = X.drop(columns=[drop_col])
+
+    # Predict all users
+    all_preds_idx = clf.predict(X)
+    all_labels = label_encoder.inverse_transform(all_preds_idx)
+
+    # Get churn probabilities
+    class_list = list(label_encoder.classes_)
+    try:
+        idx_ret = class_list.index('Retention Offer')
+        proba_all = clf.predict_proba(X)
+    except Exception:
+        proba_all = None
+
+    # Count buckets
+    buckets = {'high': 0, 'medium': 0, 'low': 0}
+    for i, label in enumerate(all_labels):
+        churn_proba = float(proba_all[i][idx_ret]) if proba_all is not None else 0.0
+        bucket = compute_churn_bucket(label, churn_proba, all_users[i])
+        buckets[bucket] += 1
+
+    return buckets
 
 
 @app.get("/health")
