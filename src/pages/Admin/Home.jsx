@@ -114,13 +114,14 @@ const Home = () => {
               className="rounded-xl border border-slate-800 bg-slate-900/80 p-5 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 animate-fade-in-up"
               style={{ animationDelay: `${200 + idx * 100}ms` }}
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-slate-400 mb-2">{stat.label}</p>
-                  <p className="text-3xl font-extrabold text-white tracking-tight">{stat.value}</p>
+              <div className="flex items-center gap-4 mb-4">
+                <div className={`rounded-xl ${stat.bgColor} p-3 ${stat.iconColor} animate-float-soft flex-shrink-0`}>
+                  <Icon size={32} />
                 </div>
-                <div className={`rounded-xl ${stat.bgColor} p-3 ${stat.iconColor} animate-float-soft`}>
-                  <Icon size={24} />
+                <div>
+                  <p className="text-lg font-bold text-white mb-1">{stat.label}</p>
+                  <p className="text-2xl font-extrabold text-white tracking-tight">{stat.value}</p>
+                  <span className={`text-sm font-semibold ${stat.changeColor}`}>{stat.change}</span>
                 </div>
               </div>
               <div className="flex items-center gap-2">

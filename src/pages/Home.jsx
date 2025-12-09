@@ -63,20 +63,20 @@ const Home = () => {
       <AnalyticsHero />
       <main className="relative">
         {/* Tentang Sistem Section */}
-        <section id="tentang-sistem" className="py-24 bg-slate-950">
+          <section id="tentang-sistem" className="py-24 bg-white dark:bg-slate-950">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16 animate-fade-in-up">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/70 border border-slate-700 text-slate-100 text-xs md:text-sm font-medium mb-6 animate-fade-in delay-100">
                 <Sparkles className="w-4 h-4" />
                 <span>Tentang Sistem</span>
               </div>
-              <h2 className="text-3xl md:text-5xl lg:text-6xl font-extrabold mb-4 text-white animate-fade-in-up delay-200 tracking-tight">
+              <h2 className="text-3xl md:text-5xl lg:text-6xl font-extrabold mb-4 animate-fade-in-up delay-200 tracking-tight text-slate-900 dark:text-white">
                 Penjelasan Sistem
-                <span className="block text-slate-300 text-2xl md:text-3xl lg:text-4xl font-semibold mt-2">
+                <span className="block text-slate-900 dark:text-slate-300 text-2xl md:text-3xl lg:text-4xl font-semibold mt-2">
                   Telvora Analytics
                 </span>
               </h2>
-              <p className="text-base md:text-lg lg:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed animate-fade-in-up delay-300">
+              <p className="text-base md:text-lg lg:text-xl max-w-3xl mx-auto leading-relaxed animate-fade-in-up delay-300 text-slate-700 dark:text-slate-400">
                 Platform analitik berbasis Machine Learning yang dirancang untuk membantu Anda mengelola pelanggan, 
                 menganalisis perilaku, dan memberikan rekomendasi produk yang tepat sasaran.
               </p>
@@ -88,22 +88,20 @@ const Home = () => {
                 return (
                   <div
                     key={index}
-                    className="rounded-2xl border border-[#1e2a3d] bg-[#0f1727] p-8 shadow-sm hover:shadow-xl transition-all duration-300 ease-out flex flex-col h-full animate-fade-in-up hover:-translate-y-1"
+                    className="rounded-2xl border border-slate-200 dark:border-[#1e2a3d] bg-white dark:bg-[#0f1727] p-8 shadow-sm hover:shadow-xl transition-all duration-300 ease-out flex flex-col h-full animate-fade-in-up hover:-translate-y-1"
                     style={{ animationDelay: `${200 + index * 100}ms` }}
                   >
-                    <div className="flex flex-col flex-1">
-                      <div className="inline-flex p-4 rounded-2xl bg-[#182338] text-sky-300 mb-6 animate-float-soft">
+                    <div className="flex flex-row items-center gap-4 mb-4">
+                      <div className="inline-flex p-4 rounded-2xl bg-slate-100 dark:bg-[#182338] text-sky-500 dark:text-sky-300 animate-float-soft">
                         <Icon className="w-8 h-8" />
                       </div>
-                      
-                      <h3 className="text-xl md:text-2xl font-semibold text-white mb-3 tracking-tight">
+                      <h3 className="text-xl md:text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">
                         {feature.title}
                       </h3>
-                      
-                      <p className="text-sm md:text-base text-slate-300 leading-relaxed flex-1">
-                        {feature.desc}
-                      </p>
                     </div>
+                    <p className="text-sm md:text-base text-slate-700 dark:text-slate-300 leading-relaxed flex-1">
+                      {feature.desc}
+                    </p>
                   </div>
                 )
               })}

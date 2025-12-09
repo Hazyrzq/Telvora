@@ -53,12 +53,12 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950 p-4 relative overflow-hidden transition-colors">
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse-glow-soft"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse-glow-soft delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl animate-pulse-glow-soft delay-2000"></div>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 dark:bg-cyan-500/10 rounded-full blur-3xl animate-pulse-glow-soft"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 dark:bg-blue-500/10 rounded-full blur-3xl animate-pulse-glow-soft delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-emerald-500/5 dark:bg-emerald-500/5 rounded-full blur-3xl animate-pulse-glow-soft delay-2000"></div>
       </div>
 
       {/* Grid Pattern Overlay */}
@@ -77,14 +77,14 @@ const Login = () => {
           </div>
           
           <div className="space-y-4 animate-fade-in-up delay-200">
-            <h1 className="text-5xl font-extrabold text-white tracking-tight">
+            <h1 className="text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               Telvora
             </h1>
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-800/70 border border-slate-700 text-slate-100 text-sm font-medium animate-fade-in delay-300 animate-float-soft">
-              <Sparkles className="w-4 h-4 text-cyan-300" />
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-sm font-medium animate-fade-in delay-300 animate-float-soft">
+              <Sparkles className="w-4 h-4 text-cyan-500 dark:text-cyan-300" />
               <span>Analytics Portal</span>
             </div>
-            <p className="text-slate-400 text-base leading-relaxed max-w-sm mx-auto animate-fade-in-up delay-400">
+            <p className="text-slate-600 dark:text-slate-400 text-base leading-relaxed max-w-sm mx-auto animate-fade-in-up delay-400">
               Platform analitik berbasis Machine Learning untuk mengelola pelanggan dan memberikan rekomendasi produk yang tepat sasaran.
             </p>
           </div>
@@ -92,15 +92,15 @@ const Login = () => {
 
         {/* Right Side - Login Form */}
         <div className="w-full flex items-center justify-center animate-fade-in-up delay-300">
-          <Card className="w-full max-w-md border border-slate-800 bg-slate-900/80 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300">
+          <Card className="w-full max-w-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300">
             <CardHeader className="space-y-2 text-center animate-fade-in-up delay-400">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 mb-4 mx-auto animate-float-soft">
                 <Lock className="w-8 h-8 text-white" />
               </div>
-              <CardTitle className="text-3xl font-extrabold text-white tracking-tight">
+              <CardTitle className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                 ADMIN LOGIN
               </CardTitle>
-              <CardDescription className="text-slate-400 text-base">
+              <CardDescription className="text-slate-600 dark:text-slate-400 text-base">
                 Akses Telvora Analytics Portal
               </CardDescription>
             </CardHeader>
@@ -108,42 +108,42 @@ const Login = () => {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2 animate-fade-in-up delay-500">
-                  <Label htmlFor="email" className="text-slate-300 text-sm font-medium">
+                  <Label htmlFor="email" className="text-slate-900 dark:text-slate-300 text-sm font-medium">
                     Email Address
                   </Label>
                   <div className="relative group">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-cyan-400 transition-colors duration-200" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500 group-focus-within:text-cyan-500 dark:group-focus-within:text-cyan-400 transition-colors duration-200" />
                     <Input
                       id="email"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="your@email.com"
-                      className="pl-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20 transition-all duration-200"
+                      className="pl-10 bg-slate-100 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20 transition-all duration-200"
                       required
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2 animate-fade-in-up delay-600">
-                  <Label htmlFor="password" className="text-slate-300 text-sm font-medium">
+                  <Label htmlFor="password" className="text-slate-900 dark:text-slate-300 text-sm font-medium">
                     Password
                   </Label>
                   <div className="relative group">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-cyan-400 transition-colors duration-200" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500 group-focus-within:text-cyan-500 dark:group-focus-within:text-cyan-400 transition-colors duration-200" />
                     <Input
                       id="password"
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="pl-10 pr-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20 transition-all duration-200"
+                      className="pl-10 pr-10 bg-slate-100 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20 transition-all duration-200"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-500 hover:text-cyan-400 hover:bg-slate-700/50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-400 dark:text-slate-500 hover:text-cyan-500 dark:hover:text-cyan-400 hover:bg-slate-200 dark:hover:bg-slate-700/50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
                       {showPassword ? (
@@ -156,7 +156,7 @@ const Login = () => {
                 </div>
 
                 {error && (
-                  <div className="flex items-start gap-3 p-4 text-sm text-red-400 bg-red-900/20 border border-red-800/50 rounded-lg animate-fade-in-up">
+                  <div className="flex items-start gap-3 p-4 text-sm text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/20 border border-red-300 dark:border-red-800/50 rounded-lg animate-fade-in-up">
                     <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
                     <span className="leading-relaxed">{error}</span>
                   </div>
@@ -184,7 +184,7 @@ const Login = () => {
                   )}
                 </Button>
 
-                <div className="text-center text-sm text-slate-500 pt-2 animate-fade-in-up delay-800">
+                <div className="text-center text-sm text-slate-500 dark:text-slate-400 pt-2 animate-fade-in-up delay-800">
                   <p className="leading-relaxed">
                     Gunakan akun admin atau pengguna untuk akses ke dashboard. 
                     <span className="block mt-1">Sesi dikelola oleh Supabase Auth.</span>

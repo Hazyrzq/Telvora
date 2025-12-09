@@ -42,7 +42,7 @@ const items = [
 
 const AnalyticsFeatures = () => {
   return (
-    <section className="relative py-24 bg-slate-950">
+    <section className="relative py-24 bg-white dark:bg-slate-950">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16 animate-fade-in-up">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/70 border border-slate-700 text-slate-100 text-xs md:text-sm font-medium mb-6 animate-fade-in delay-100">
@@ -50,13 +50,13 @@ const AnalyticsFeatures = () => {
             <span>Analytics Features</span>
           </div>
           <h2 className="text-3xl md:text-5xl lg:text-6xl font-extrabold mb-4 text-white animate-fade-in-up delay-200 tracking-tight">
-            Powerful Tools untuk
-            <span className="block text-slate-300 text-2xl md:text-3xl lg:text-4xl font-semibold mt-2">
+            <span className="text-slate-900 dark:text-white">Powerful Tools untuk</span>
+            <span className="block text-slate-700 dark:text-slate-300 text-2xl md:text-3xl lg:text-4xl font-semibold mt-2">
               Optimalkan Bisnis
             </span>
           </h2>
           <p className="text-base md:text-lg lg:text-xl text-slate-400 max-w-2xl mx-auto animate-fade-in-up delay-300 leading-relaxed">
-            Fitur-fitur canggih yang dirancang untuk meningkatkan efisiensi dan akurasi analitik Anda
+            <span className="text-slate-700 dark:text-slate-400">Fitur-fitur canggih yang dirancang untuk meningkatkan efisiensi dan akurasi analitik Anda</span>
           </p>
         </div>
 
@@ -66,23 +66,21 @@ const AnalyticsFeatures = () => {
             return (
               <div
                 key={index}
-                className="rounded-2xl border border-[#1e2a3d] bg-[#0f1727] p-8 shadow-sm hover:shadow-xl transition-all duration-300 ease-out flex flex-col h-full animate-fade-in-up hover:-translate-y-1"
+                className="rounded-2xl border border-slate-200 dark:border-[#1e2a3d] bg-white dark:bg-[#0f1727] p-8 shadow-sm hover:shadow-xl transition-all duration-300 ease-out flex flex-col h-full animate-fade-in-up hover:-translate-y-1"
                 style={{ animationDelay: `${200 + index * 100}ms` }}
               >
-                <div className="flex flex-col flex-1">
-                  <div className="inline-flex p-4 rounded-2xl bg-[#182338] text-sky-300 mb-6 animate-float-soft">
+                <div className="flex flex-row items-center gap-4 mb-4">
+                  <div className="inline-flex p-4 rounded-2xl bg-slate-100 dark:bg-[#182338] text-sky-500 dark:text-sky-300 animate-float-soft">
                     <Icon className="w-8 h-8" />
                   </div>
-                  
-                  <h3 className="text-xl md:text-2xl font-semibold text-white mb-3 tracking-tight">
+                  <h3 className="text-xl md:text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">
                     {item.title}
                   </h3>
-                  
-                  <p className="text-sm md:text-base text-slate-300 leading-relaxed flex-1">
-                    {item.desc}
-                  </p>
                 </div>
-            </div>
+                <p className="text-sm md:text-base text-slate-700 dark:text-slate-300 leading-relaxed flex-1">
+                  {item.desc}
+                </p>
+              </div>
             )
           })}
         </div>
