@@ -418,7 +418,7 @@ export const getPackages = async (filters = {}) => {
       dataCapacity: parseFloat(item.product_capacity_gb) || 0,
       minutes: parseFloat(item.product_capacity_minutes) || 0,
       sms: parseFloat(item.product_capacity_sms) || 0,
-      vodAccess: parseFloat(item.product_capacity_vod) > 0,
+      vodCapacity: parseFloat(item.product_capacity_vod) || 0,
       // Keep original data for compatibility
       ...item
     }))
@@ -494,7 +494,7 @@ export const createPackage = async (pkg) => {
       product_capacity_gb: parseFloat(pkg.dataCapacity) || 0,
       product_capacity_minutes: parseFloat(pkg.minutes) || 0,
       product_capacity_sms: parseFloat(pkg.sms) || 0,
-      product_capacity_vod: pkg.vodAccess ? 1 : 0,
+      product_capacity_vod: parseFloat(pkg.vodCapacity) || 0,
     }
 
     // Gunakan product_catalog
@@ -520,7 +520,7 @@ export const createPackage = async (pkg) => {
         dataCapacity: parseFloat(result.product_capacity_gb) || 0,
         minutes: parseFloat(result.product_capacity_minutes) || 0,
         sms: parseFloat(result.product_capacity_sms) || 0,
-        vodAccess: parseFloat(result.product_capacity_vod) > 0,
+        vodCapacity: parseFloat(result.product_capacity_vod) || 0,
         ...result
       }
     }
@@ -545,7 +545,7 @@ export const updatePackage = async (id, pkg) => {
       product_capacity_gb: parseFloat(pkg.dataCapacity) || 0,
       product_capacity_minutes: parseFloat(pkg.minutes) || 0,
       product_capacity_sms: parseFloat(pkg.sms) || 0,
-      product_capacity_vod: pkg.vodAccess ? 1 : 0,
+      product_capacity_vod: parseFloat(pkg.vodCapacity) || 0,
     }
 
     // Gunakan product_catalog
@@ -572,7 +572,7 @@ export const updatePackage = async (id, pkg) => {
         dataCapacity: parseFloat(result.product_capacity_gb) || 0,
         minutes: parseFloat(result.product_capacity_minutes) || 0,
         sms: parseFloat(result.product_capacity_sms) || 0,
-        vodAccess: parseFloat(result.product_capacity_vod) > 0,
+        vodCapacity: parseFloat(result.product_capacity_vod) || 0,
         ...result
       }
     }

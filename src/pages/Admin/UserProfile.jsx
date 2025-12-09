@@ -15,6 +15,8 @@ const UserProfile = () => {
   const [churnInsight, setChurnInsight] = useState(null)
   const [aiInsights, setAiInsights] = useState(null)
   const [userCategory, setUserCategory] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -41,6 +43,14 @@ const UserProfile = () => {
     )
   })
 
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, customers, pageSize])
+
+  const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / pageSize))
+  const paginatedCustomers = filteredCustomers.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+
   const openAnalysis = (customer) => {
     console.log('Opening analysis for customer:', customer)
     setSelectedCustomer(customer)
@@ -59,13 +69,6 @@ const UserProfile = () => {
       setAiInsights(null)
       setUserCategory('')
     }, 400) // Match animation duration
-  }
-
-  const getChurnRisk = (customer) => {
-    const churnRate = customer.churnRate || 0
-    if (churnRate > 70) return { level: 'Tinggi', color: 'text-red-600', bg: 'bg-red-100' }
-    if (churnRate > 40) return { level: 'Sedang', color: 'text-amber-600', bg: 'bg-amber-100' }
-    return { level: 'Rendah', color: 'text-green-600', bg: 'bg-green-100' }
   }
 
   const fetchInsights = async (customerId) => {
@@ -105,6 +108,34 @@ const UserProfile = () => {
         </div>
       </div>
 
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-4 shadow-lg">
+          <p className="text-slate-400 text-sm mb-1">Total Customers</p>
+          <p className="text-3xl font-bold text-white mb-2">{customers.length}</p>
+          <p className="text-xs text-slate-500">Active customer base</p>
+          <p className="text-xs text-slate-500">Across all plans</p>
+        </div>
+        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-4 shadow-lg">
+          <p className="text-slate-400 text-sm mb-1">Avg Monthly Spend</p>
+          <p className="text-3xl font-bold text-white mb-2">{customers.length > 0 ? `Rp ${(customers.reduce((sum, c) => sum + (c.totalSpend || 0), 0) / customers.length).toLocaleString('id-ID')}` : 'Rp 0'}</p>
+          <p className="text-xs text-slate-500">Average revenue per user</p>
+          <p className="text-xs text-slate-500">ARPU metric</p>
+        </div>
+        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-4 shadow-lg">
+          <p className="text-slate-400 text-sm mb-1">Avg Data Usage</p>
+          <p className="text-3xl font-bold text-white mb-2">{customers.length > 0 ? `${(customers.reduce((sum, c) => sum + (c.dataUsage || 0), 0) / customers.length).toFixed(1)} GB` : '0 GB'}</p>
+          <p className="text-xs text-slate-500">Per user monthly average</p>
+          <p className="text-xs text-slate-500">Data consumption</p>
+        </div>
+        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-4 shadow-lg">
+          <p className="text-slate-400 text-sm mb-1">Total Complaints</p>
+          <p className="text-3xl font-bold text-white mb-2">{customers.reduce((sum, c) => sum + (c.complaintCount || 0), 0)}</p>
+          <p className="text-xs text-slate-500">Customer service tickets</p>
+          <p className="text-xs text-slate-500">All time count</p>
+        </div>
+      </div>
+
       {/* Search Bar */}
       <div className="flex gap-3">
         <div className="relative flex-1">
@@ -121,68 +152,88 @@ const UserProfile = () => {
 
       {/* Mobile Card View */}
       <div className="md:hidden space-y-4">
-        {filteredCustomers.length === 0 ? (
+        {paginatedCustomers.length === 0 ? (
           <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-8 text-center text-slate-400">
             {customers.length === 0 ? 'Memuat data pelanggan...' : 'Tidak ada pelanggan ditemukan'}
           </div>
         ) : (
-          filteredCustomers.map((customer, idx) => {
-            const risk = getChurnRisk(customer)
-            return (
-              <div
-                key={customer.id || customer.customerId || idx}
-                className="rounded-xl border border-slate-800 bg-slate-900/80 p-4 shadow-lg animate-fade-in-up"
-                style={{ animationDelay: `${idx * 50}ms` }}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-bold text-white mb-1">{customer.customerId || customer.id || 'N/A'}</h3>
-                    <p className="text-xs text-slate-400">{customer.device || 'N/A'}</p>
-                  </div>
-                  <button
-                    onClick={() => openAnalysis(customer)}
-                    className="rounded-lg bg-cyan-600 hover:bg-cyan-500 px-3 py-1.5 text-xs font-semibold text-white transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-lg hover:shadow-cyan-500/30 ml-2"
-                  >
-                    Analisis
-                  </button>
+          paginatedCustomers.map((customer, idx) => (
+            <div
+              key={customer.id || customer.customerId || idx}
+              className="rounded-xl border border-slate-800 bg-slate-900/80 p-4 shadow-lg animate-fade-in-up"
+              style={{ animationDelay: `${idx * 50}ms` }}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-bold text-white mb-1">{customer.customerId || customer.id || 'N/A'}</h3>
+                  <p className="text-xs text-slate-400">{customer.device || 'N/A'}</p>
                 </div>
+                <button
+                  onClick={() => openAnalysis(customer)}
+                  className="rounded-lg bg-cyan-600 hover:bg-cyan-500 px-3 py-1.5 text-xs font-semibold text-white transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-lg hover:shadow-cyan-500/30 ml-2"
+                >
+                  Analisis
+                </button>
+              </div>
 
-                <div className="space-y-2 mb-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400">Plan</span>
-                    <span className="inline-block rounded-full bg-cyan-500/20 border border-cyan-500/30 px-2.5 py-1 text-xs font-semibold text-cyan-400">
-                      {customer.planType || 'N/A'}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400">Data</span>
-                    <span className="text-sm text-slate-300">{(customer.dataUsage || 0).toFixed(1)} GB</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400">Pengeluaran</span>
-                    <span className="text-sm font-semibold text-white">Rp {(customer.totalSpend || 0).toLocaleString('id-ID')}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400">Churn Risk</span>
-                    <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${
-                      risk.level === 'Tinggi' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-                      risk.level === 'Sedang' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
-                      'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                    }`}>
-                      {risk.level} ({customer.churnRate || 0}%)
-                    </span>
-                  </div>
+              <div className="space-y-2 mb-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-400">Plan</span>
+                  <span className="inline-block rounded-full bg-cyan-500/20 border border-cyan-500/30 px-2.5 py-1 text-xs font-semibold text-cyan-400">
+                    {customer.planType || 'N/A'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-400">Data</span>
+                  <span className="text-sm text-slate-300">{(customer.dataUsage || 0).toFixed(1)} GB</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-400">Top Up Freq</span>
+                  <span className="text-sm text-slate-300">{customer.topupFreq || 0}x/bln</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-400">Travel Score</span>
+                  <span className="text-sm text-slate-300">{parseFloat(customer.travelScore || 0).toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-400">Complaints</span>
+                  <span className="text-sm text-slate-300">{customer.complaintCount || 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-400">Pengeluaran</span>
+                  <span className="text-sm font-semibold text-white">Rp {(customer.totalSpend || 0).toLocaleString('id-ID')}</span>
                 </div>
               </div>
-            )
-          })
+            </div>
+          ))
         )}
+        {/* Pagination controls (mobile) */}
+        <div className="flex items-center justify-between gap-3 mt-3">
+          <div className="text-sm text-slate-400">Halaman {currentPage} / {totalPages}</div>
+          <div className="flex items-center gap-2">
+            <button
+              disabled={currentPage <= 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              className="rounded px-3 py-1 text-xs bg-slate-800 border border-slate-700 text-slate-300 disabled:opacity-50"
+            >Prev</button>
+            <button
+              disabled={currentPage >= totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              className="rounded px-3 py-1 text-xs bg-slate-800 border border-slate-700 text-slate-300 disabled:opacity-50"
+            >Next</button>
+            <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="ml-2 rounded bg-slate-800 border border-slate-700 text-sm text-slate-300 px-2 py-1">
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Desktop Table View */}
       <div className="hidden md:block rounded-xl border border-slate-800 bg-slate-900/80 shadow-lg overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px]">
+          <table className="w-full min-w-[1100px]">
             <thead className="border-b border-slate-800 bg-slate-800/50">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap">Customer ID</th>
@@ -193,77 +244,99 @@ const UserProfile = () => {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap hidden lg:table-cell">Panggilan</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap hidden lg:table-cell">SMS</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap">Pengeluaran</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap">Churn Risk</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap">Top Up Freq</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap hidden md:table-cell">Travel Score</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap hidden sm:table-cell">Complaints</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-slate-300 whitespace-nowrap">Aksi</th>
               </tr>
             </thead>
             <tbody>
-              {filteredCustomers.length === 0 ? (
+              {paginatedCustomers.length === 0 ? (
                 <tr>
-                  <td colSpan="10" className="px-6 py-8 text-center text-slate-400">
+                  <td colSpan="12" className="px-6 py-8 text-center text-slate-400">
                     {customers.length === 0 ? 'Memuat data pelanggan...' : 'Tidak ada pelanggan ditemukan'}
                   </td>
                 </tr>
               ) : (
-                filteredCustomers.map((customer, idx) => {
-                  const risk = getChurnRisk(customer)
-                  return (
-                    <tr 
-                      key={customer.id || customer.customerId || idx} 
-                      className="border-b border-slate-800 transition hover:bg-slate-800/30 animate-fade-in-up"
-                      style={{ animationDelay: `${idx * 50}ms` }}
-                    >
-                      <td className="px-4 py-4 text-sm font-medium text-white whitespace-nowrap">
-                        {customer.customerId || customer.id || 'N/A'}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <span className="inline-block rounded-full bg-cyan-500/20 border border-cyan-500/30 px-3 py-1 text-xs font-semibold text-cyan-400">
-                          {customer.planType || 'N/A'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 text-sm text-slate-300 whitespace-nowrap hidden sm:table-cell">
-                        <div className="max-w-[120px] truncate" title={customer.device || 'N/A'}>
-                          {customer.device || 'N/A'}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 text-sm text-slate-300 whitespace-nowrap">
-                        {(customer.dataUsage || 0).toFixed(1)}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-slate-300 whitespace-nowrap hidden md:table-cell">
-                        {parseFloat(customer.videoPercentage || 0).toFixed(1)}%
-                      </td>
-                      <td className="px-4 py-4 text-sm text-slate-300 whitespace-nowrap hidden lg:table-cell">
-                        {parseFloat(customer.callMinutes || 0).toFixed(1)}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-slate-300 whitespace-nowrap hidden lg:table-cell">
-                        {customer.smsCount || 0}
-                      </td>
-                      <td className="px-4 py-4 text-sm font-medium text-white whitespace-nowrap">
-                        Rp {(customer.totalSpend || 0).toLocaleString('id-ID')}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${
-                          risk.level === 'Tinggi' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-                          risk.level === 'Sedang' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
-                          'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                        }`}>
-                          {risk.level} ({customer.churnRate || 0}%)
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 text-center whitespace-nowrap">
-                        <button
-                          onClick={() => openAnalysis(customer)}
-                          className="rounded-lg bg-cyan-600 hover:bg-cyan-500 px-3 py-1.5 text-xs font-semibold text-white transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-lg hover:shadow-cyan-500/30"
-                        >
-                          Analisis
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })
+                paginatedCustomers.map((customer, idx) => (
+                  <tr 
+                    key={customer.id || customer.customerId || idx} 
+                    className="border-b border-slate-800 transition hover:bg-slate-800/30 animate-fade-in-up"
+                    style={{ animationDelay: `${idx * 50}ms` }}
+                  >
+                    <td className="px-4 py-4 text-sm font-medium text-white whitespace-nowrap">
+                      {customer.customerId || customer.id || 'N/A'}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <span className="inline-block rounded-full bg-cyan-500/20 border border-cyan-500/30 px-3 py-1 text-xs font-semibold text-cyan-400">
+                        {customer.planType || 'N/A'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 text-sm text-slate-300 whitespace-nowrap hidden sm:table-cell">
+                      <div className="max-w-[120px] truncate" title={customer.device || 'N/A'}>
+                        {customer.device || 'N/A'}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 text-sm text-slate-300 whitespace-nowrap">
+                      {(customer.dataUsage || 0).toFixed(1)}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-slate-300 whitespace-nowrap hidden md:table-cell">
+                      {parseFloat(customer.videoPercentage || 0).toFixed(1)}%
+                    </td>
+                    <td className="px-4 py-4 text-sm text-slate-300 whitespace-nowrap hidden lg:table-cell">
+                      {parseFloat(customer.callMinutes || 0).toFixed(1)}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-slate-300 whitespace-nowrap hidden lg:table-cell">
+                      {customer.smsCount || 0}
+                    </td>
+                    <td className="px-4 py-4 text-sm font-medium text-white whitespace-nowrap">
+                      Rp {(customer.totalSpend || 0).toLocaleString('id-ID')}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-slate-300 whitespace-nowrap">
+                      {customer.topupFreq || 0}x/bln
+                    </td>
+                    <td className="px-4 py-4 text-sm text-slate-300 whitespace-nowrap hidden md:table-cell">
+                      {parseFloat(customer.travelScore || 0).toFixed(2)}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-slate-300 whitespace-nowrap hidden sm:table-cell">
+                      {customer.complaintCount || 0}
+                    </td>
+                    <td className="px-4 py-4 text-center whitespace-nowrap">
+                      <button
+                        onClick={() => openAnalysis(customer)}
+                        className="rounded-lg bg-cyan-600 hover:bg-cyan-500 px-3 py-1.5 text-xs font-semibold text-white transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-lg hover:shadow-cyan-500/30"
+                      >
+                        Analisis
+                      </button>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* Desktop pagination */}
+      <div className="flex items-center justify-between gap-3 p-4 border-t border-slate-800 bg-slate-900/60">
+        <div className="text-sm text-slate-400">Menampilkan {Math.min(filteredCustomers.length, pageSize)} dari {filteredCustomers.length} hasil</div>
+        <div className="flex items-center gap-2">
+          <button
+            disabled={currentPage <= 1}
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            className="rounded px-3 py-1 text-xs bg-slate-800 border border-slate-700 text-slate-300 disabled:opacity-50"
+          >Prev</button>
+          <div className="text-sm text-slate-300 px-3">{currentPage} / {totalPages}</div>
+          <button
+            disabled={currentPage >= totalPages}
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            className="rounded px-3 py-1 text-xs bg-slate-800 border border-slate-700 text-slate-300 disabled:opacity-50"
+          >Next</button>
+          <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="ml-2 rounded bg-slate-800 border border-slate-700 text-sm text-slate-300 px-2 py-1">
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+          </select>
         </div>
       </div>
 

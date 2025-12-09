@@ -5,6 +5,17 @@ import { Search, Plus, Edit2, Trash2, X } from 'lucide-react'
 import ConfirmDialog from '../../components/ConfirmDialog'
 
 const Product = () => {
+  const sortPackages = (list) => {
+    return [...list].sort((a, b) => {
+      const nameA = (a.productName || a.name || '').toLowerCase()
+      const nameB = (b.productName || b.name || '').toLowerCase()
+      if (nameA < nameB) return -1
+      if (nameA > nameB) return 1
+      const idA = (a.productId || a.id || '').toString()
+      const idB = (b.productId || b.id || '').toString()
+      return idA.localeCompare(idB)
+    })
+  }
   const [packages, setPackages] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -21,15 +32,17 @@ const Product = () => {
     dataCapacity: '',
     minutes: '',
     sms: '',
-    vodAccess: false
+    vodCapacity: ''
   })
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   useEffect(() => {
     const fetchPackages = async () => {
       try {
         setLoading(true)
         const data = await getPackages()
-        setPackages(data)
+        setPackages(sortPackages(data))
       } catch (error) {
         console.error('Error fetching packages:', error)
       } finally {
@@ -51,7 +64,7 @@ const Product = () => {
       dataCapacity: '',
       minutes: '',
       sms: '',
-      vodAccess: false
+      vodCapacity: ''
     })
     setShowModal(true)
   }
@@ -63,6 +76,20 @@ const Product = () => {
     const description = (pkg.description || '').toLowerCase()
     return productName.includes(searchLower) || productId.includes(searchLower) || description.includes(searchLower)
   })
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, pageSize])
+
+  useEffect(() => {
+    const newTotalPages = Math.max(1, Math.ceil(filteredPackages.length / pageSize))
+    if (currentPage > newTotalPages) {
+      setCurrentPage(newTotalPages)
+    }
+  }, [filteredPackages.length, pageSize, currentPage])
+
+  const totalPages = Math.max(1, Math.ceil(filteredPackages.length / pageSize))
+  const paginatedPackages = filteredPackages.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   const handleEditPackage = (pkg) => {
     console.log('Opening edit package modal:', pkg)
@@ -76,7 +103,7 @@ const Product = () => {
       dataCapacity: pkg.dataCapacity || '',
       minutes: pkg.minutes || '',
       sms: pkg.sms || '',
-      vodAccess: pkg.vodAccess || false
+      vodCapacity: pkg.vodCapacity || ''
     })
     setShowModal(true)
   }
@@ -106,7 +133,7 @@ const Product = () => {
         await createPackage(formData)
       }
       const data = await getPackages()
-      setPackages(data)
+      setPackages(sortPackages(data))
       handleCloseModal()
     } catch (error) {
       console.error('Error saving package:', error)
@@ -123,7 +150,7 @@ const Product = () => {
     try {
       await deletePackage(deleteConfirm.id)
       const data = await getPackages()
-      setPackages(data)
+      setPackages(sortPackages(data))
     } catch (error) {
       console.error('Error deleting package:', error)
     }
@@ -157,6 +184,34 @@ const Product = () => {
         </button>
       </div>
 
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-4 shadow-lg">
+          <p className="text-slate-400 text-sm mb-1">Total Products</p>
+          <p className="text-3xl font-bold text-white mb-2">{packages.length}</p>
+          <p className="text-xs text-slate-500">Active product catalog</p>
+          <p className="text-xs text-slate-500">Available for sale</p>
+        </div>
+        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-4 shadow-lg">
+          <p className="text-slate-400 text-sm mb-1">Categories</p>
+          <p className="text-3xl font-bold text-white mb-2">{new Set(packages.map(p => p.category)).size}</p>
+          <p className="text-xs text-slate-500">Product categories</p>
+          <p className="text-xs text-slate-500">Unique segments</p>
+        </div>
+        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-4 shadow-lg">
+          <p className="text-slate-400 text-sm mb-1">Avg Price</p>
+          <p className="text-3xl font-bold text-white mb-2">{packages.length > 0 ? `Rp ${(packages.reduce((sum, p) => sum + (p.price || 0), 0) / packages.length).toLocaleString('id-ID')}` : 'Rp 0'}</p>
+          <p className="text-xs text-slate-500">Average product price</p>
+          <p className="text-xs text-slate-500">Across catalog</p>
+        </div>
+        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-4 shadow-lg">
+          <p className="text-slate-400 text-sm mb-1">Avg Duration</p>
+          <p className="text-3xl font-bold text-white mb-2">{packages.length > 0 ? `${(packages.reduce((sum, p) => sum + (p.duration || p.durationDays || 30), 0) / packages.length).toFixed(0)} days` : '0 days'}</p>
+          <p className="text-xs text-slate-500">Average plan duration</p>
+          <p className="text-xs text-slate-500">Per subscription</p>
+        </div>
+      </div>
+
       {/* Search Bar */}
       <div className="flex gap-3">
         <div className="relative flex-1">
@@ -173,12 +228,12 @@ const Product = () => {
 
       {/* Mobile Card View */}
       <div className="md:hidden space-y-4">
-        {filteredPackages.length === 0 ? (
+        {paginatedPackages.length === 0 ? (
           <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-8 text-center text-slate-400">
             {packages.length === 0 ? 'Memuat data produk...' : 'Tidak ada produk ditemukan'}
           </div>
         ) : (
-          filteredPackages.map((pkg, idx) => (
+          paginatedPackages.map((pkg, idx) => (
             <div
               key={pkg.id || pkg.productId || idx}
               className="rounded-xl border border-slate-800 bg-slate-900/80 p-4 shadow-lg animate-fade-in-up"
@@ -212,10 +267,11 @@ const Product = () => {
                   <span className="text-xs text-slate-400">Kategori</span>
                   <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold border ${
                     pkg.category === 'Data' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
-                    pkg.category === 'Hemat Data' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
-                    pkg.category === 'Unlimited' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' :
-                    pkg.category === 'Premium' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
-                    pkg.category === 'Business' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
+                    pkg.category === 'Combo' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' :
+                    pkg.category === 'VOD' ? 'bg-pink-500/20 text-pink-400 border-pink-500/30' :
+                    pkg.category === 'Roaming' ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' :
+                    pkg.category === 'Device Bundle' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                    pkg.category === 'Voice' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
                     'bg-slate-500/20 text-slate-400 border-slate-500/30'
                   }`}>
                     {pkg.category || 'Data'}
@@ -229,6 +285,10 @@ const Product = () => {
                   <span className="text-xs text-slate-400">Data</span>
                   <span className="text-sm text-slate-300">{parseFloat(pkg.dataCapacity || 0).toFixed(1)} GB</span>
                 </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-400">Durasi</span>
+                  <span className="text-sm text-slate-300">{pkg.duration || pkg.durationDays || 30} hari</span>
+                </div>
                 {pkg.description && (
                   <div className="pt-2 border-t border-slate-700">
                     <p className="text-xs text-slate-400 line-clamp-2">{pkg.description}</p>
@@ -238,6 +298,27 @@ const Product = () => {
             </div>
           ))
         )}
+        {/* Pagination controls (mobile) */}
+        <div className="flex items-center justify-between gap-3 mt-3">
+          <div className="text-sm text-slate-400">Halaman {currentPage} / {totalPages}</div>
+          <div className="flex items-center gap-2">
+            <button
+              disabled={currentPage <= 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              className="rounded px-3 py-1 text-xs bg-slate-800 border border-slate-700 text-slate-300 disabled:opacity-50"
+            >Prev</button>
+            <button
+              disabled={currentPage >= totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              className="rounded px-3 py-1 text-xs bg-slate-800 border border-slate-700 text-slate-300 disabled:opacity-50"
+            >Next</button>
+            <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="ml-2 rounded bg-slate-800 border border-slate-700 text-sm text-slate-300 px-2 py-1">
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Desktop Table View */}
@@ -252,6 +333,7 @@ const Product = () => {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap">Kategori</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap">Harga</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap hidden md:table-cell">Data (GB)</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap hidden md:table-cell">Durasi</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap hidden lg:table-cell">Menit</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap hidden lg:table-cell">SMS</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap hidden sm:table-cell">VOD</th>
@@ -259,14 +341,14 @@ const Product = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredPackages.length === 0 ? (
+              {paginatedPackages.length === 0 ? (
                 <tr>
-                  <td colSpan="10" className="px-6 py-8 text-center text-slate-400">
+                  <td colSpan="11" className="px-6 py-8 text-center text-slate-400">
                     {packages.length === 0 ? 'Memuat data produk...' : 'Tidak ada produk ditemukan'}
                   </td>
                 </tr>
               ) : (
-                filteredPackages.map((pkg, idx) => (
+                paginatedPackages.map((pkg, idx) => (
                   <tr 
                     key={pkg.id || pkg.productId || idx} 
                     className="border-b border-slate-800 transition hover:bg-slate-800/30 animate-fade-in-up"
@@ -288,10 +370,11 @@ const Product = () => {
                     <td className="px-4 py-4 whitespace-nowrap">
                       <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold border ${
                         pkg.category === 'Data' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
-                        pkg.category === 'Hemat Data' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
-                        pkg.category === 'Unlimited' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' :
-                        pkg.category === 'Premium' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
-                        pkg.category === 'Business' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
+                        pkg.category === 'Combo' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' :
+                        pkg.category === 'VOD' ? 'bg-pink-500/20 text-pink-400 border-pink-500/30' :
+                        pkg.category === 'Roaming' ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' :
+                        pkg.category === 'Device Bundle' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                        pkg.category === 'Voice' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
                         'bg-slate-500/20 text-slate-400 border-slate-500/30'
                       }`}>
                         {pkg.category || 'Data'}
@@ -303,18 +386,17 @@ const Product = () => {
                     <td className="px-4 py-4 text-sm text-slate-300 whitespace-nowrap hidden md:table-cell">
                       {parseFloat(pkg.dataCapacity || 0).toFixed(1)}
                     </td>
+                    <td className="px-4 py-4 text-sm text-slate-300 whitespace-nowrap hidden md:table-cell">
+                      {pkg.duration || pkg.durationDays || 30}
+                    </td>
                     <td className="px-4 py-4 text-sm text-slate-300 whitespace-nowrap hidden lg:table-cell">
                       {parseFloat(pkg.minutes || 0).toFixed(0)}
                     </td>
                     <td className="px-4 py-4 text-sm text-slate-300 whitespace-nowrap hidden lg:table-cell">
                       {parseFloat(pkg.sms || 0).toFixed(0)}
                     </td>
-                    <td className="px-4 py-4 text-center whitespace-nowrap hidden sm:table-cell">
-                      {pkg.vodAccess ? (
-                        <span className="inline-flex rounded-full bg-emerald-500/20 border border-emerald-500/30 px-2 py-1 text-xs font-semibold text-emerald-400">✓</span>
-                      ) : (
-                        <span className="inline-flex rounded-full bg-slate-500/20 border border-slate-500/30 px-2 py-1 text-xs font-semibold text-slate-400">✗</span>
-                      )}
+                    <td className="px-4 py-4 text-sm text-slate-300 whitespace-nowrap hidden sm:table-cell">
+                      {parseFloat(pkg.vodCapacity || 0).toFixed(1)}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div className="flex justify-center gap-2">
@@ -339,6 +421,28 @@ const Product = () => {
               )}
             </tbody>
           </table>
+        </div>
+        {/* Desktop pagination */}
+        <div className="flex items-center justify-between gap-3 p-4 border-t border-slate-800 bg-slate-900/60">
+          <div className="text-sm text-slate-400">Menampilkan {Math.min(filteredPackages.length, pageSize)} dari {filteredPackages.length} hasil</div>
+          <div className="flex items-center gap-2">
+            <button
+              disabled={currentPage <= 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              className="rounded px-3 py-1 text-xs bg-slate-800 border border-slate-700 text-slate-300 disabled:opacity-50"
+            >Prev</button>
+            <div className="text-sm text-slate-300 px-3">{currentPage} / {totalPages}</div>
+            <button
+              disabled={currentPage >= totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              className="rounded px-3 py-1 text-xs bg-slate-800 border border-slate-700 text-slate-300 disabled:opacity-50"
+            >Next</button>
+            <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="ml-2 rounded bg-slate-800 border border-slate-700 text-sm text-slate-300 px-2 py-1">
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -421,10 +525,12 @@ const Product = () => {
                     onChange={handleFormChange}
                     className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                   >
-                    <option value="Hemat Data">Hemat Data</option>
-                    <option value="Unlimited">Unlimited</option>
-                    <option value="Premium">Premium</option>
-                    <option value="Business">Business</option>
+                    <option value="Data">Data</option>
+                    <option value="Combo">Combo</option>
+                    <option value="VOD">VOD</option>
+                    <option value="Roaming">Roaming</option>
+                    <option value="Device Bundle">Device Bundle</option>
+                    <option value="Voice">Voice</option>
                   </select>
                 </div>
 
@@ -491,18 +597,16 @@ const Product = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">VOD (GB)</label>
                 <input
-                  type="checkbox"
-                  id="vodAccess"
-                  name="vodAccess"
-                  checked={formData.vodAccess}
+                  type="number"
+                  name="vodCapacity"
+                  value={formData.vodCapacity}
                   onChange={handleFormChange}
-                  className="h-4 w-4 rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-cyan-500"
+                  placeholder="0"
+                  className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                 />
-                <label htmlFor="vodAccess" className="text-sm font-medium text-slate-300">
-                  Akses Video on Demand
-                </label>
               </div>
             </div>
 

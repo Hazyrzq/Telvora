@@ -191,12 +191,12 @@ const ProductLab = () => {
                 className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
               >
                 <option value="">Pilih Category</option>
-                <option value="Hemat Data">Hemat Data</option>
-                <option value="Unlimited">Unlimited</option>
-                <option value="Premium">Premium</option>
-                <option value="Business">Business</option>
-                <option value="Gaming">Gaming</option>
-                <option value="Streaming">Streaming</option>
+                <option value="Data">Data</option>
+                <option value="Combo">Combo</option>
+                <option value="VOD">VOD</option>
+                <option value="Roaming">Roaming</option>
+                <option value="Device Bundle">Device Bundle</option>
+                <option value="Voice">Voice</option>
               </select>
             </div>
 
