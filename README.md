@@ -481,7 +481,7 @@ User Visit Landing → Click "Login"
 - **Dataset Size**: 10,000+ customer profiles
 - **Split**: 80% train, 20% test
 - **Feature Engineering**: Normalization, outlier handling
-- **Accuracy**: ~85% (evaluated on test set)
+- **Accuracy**: ~95% (evaluated on test set)
 
 ### Inference Pipeline
 ```
