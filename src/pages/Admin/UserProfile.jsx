@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import Toast from '../../components/Toast';
+import ImportFile from '../../components/ImportFile';
 import { createPortal } from 'react-dom'
 import { getCustomers, getCustomerInsights, createCustomer, deleteCustomer } from '../../services/api'
 import { Search, X, AlertTriangle, Sparkles, ChevronRight, Plus, Trash2 } from 'lucide-react'
@@ -32,7 +34,8 @@ const UserProfile = () => {
     topup_freq: '',
     travel_score: '',
     complaint_count: '0'
-  })
+  });
+  const [toast, setToast] = useState(null);
 
   const fetchCustomers = async () => {
     try {
@@ -225,15 +228,73 @@ const UserProfile = () => {
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">User Profile</h1>
           <p className="mt-1 text-slate-600 dark:text-slate-400">Kelola dan analisis data pelanggan</p>
         </div>
-        <button
-          onClick={handleAddCustomer}
-          className="flex items-center gap-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-lg hover:shadow-cyan-500/30"
-        >
-          <Plus size={18} />
-          Tambah Pelanggan
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleAddCustomer}
+            className="flex items-center gap-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-lg hover:shadow-cyan-500/30"
+          >
+            <Plus size={18} />
+            Tambah Pelanggan
+          </button>
+          <ImportFile
+            label="Import Customer CSV/XLSX"
+            templateFields={[
+              "customer_id",
+              "plan_type",
+              "device_brand",
+              "avg_data_usage_gb",
+              "pct_video_usage",
+              "avg_call_duration",
+              "sms_freq",
+              "monthly_spend",
+              "topup_freq",
+              "travel_score",
+              "complaint_count",
+              "target_offer"
+            ]}
+            onImport={async (rows) => {
+              let maxNum = 0;
+              customers.forEach(customer => {
+                const customerId = customer.customer_id || customer.customerId || customer.id || '';
+                const match = customerId.match(/C(\d+)/);
+                if (match) {
+                  const num = parseInt(match[1], 10);
+                  if (num > maxNum) maxNum = num;
+                }
+              });
+              let nextNum = maxNum + 1;
+              let success = 0;
+              let fail = 0;
+              for (const row of rows) {
+                let newRow = { ...row };
+                if (!newRow.customer_id || newRow.customer_id === '') {
+                  newRow.customer_id = `C${String(nextNum).padStart(5, '0')}`;
+                  nextNum++;
+                }
+                try {
+                  await createCustomer(newRow);
+                  success++;
+                } catch (e) {
+                  fail++;
+                }
+              }
+              await fetchCustomers();
+              setToast({
+                message: `Import selesai: ${success} berhasil${fail > 0 ? ", " + fail + " gagal" : ""}`,
+                type: fail > 0 ? 'error' : 'success'
+              });
+            }}
+          />
+        </div>
       </div>
 
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
       {/* Statistics Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-4 shadow-lg">
@@ -344,13 +405,28 @@ const UserProfile = () => {
         )}
         {/* Pagination controls (mobile) */}
         <div className="flex items-center justify-between gap-3 mt-3">
-          <div className="text-sm text-slate-600 dark:text-slate-400">Halaman {currentPage} / {totalPages}</div>
+          <div className="text-sm text-slate-600 dark:text-slate-400">Halaman</div>
           <div className="flex items-center gap-2">
             <button
               disabled={currentPage <= 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               className="rounded px-3 py-1 text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 disabled:opacity-50"
             >Prev</button>
+            <input
+              type="number"
+              min={1}
+              max={totalPages}
+              value={currentPage}
+              onChange={e => {
+                let val = Number(e.target.value);
+                if (isNaN(val)) val = 1;
+                val = Math.max(1, Math.min(totalPages, val));
+                setCurrentPage(val);
+              }}
+              className="w-14 text-center rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-700 dark:text-slate-300 px-2 py-1 focus:ring-2 focus:ring-cyan-500 outline-none"
+              style={{ WebkitAppearance: 'none', MozAppearance: 'textfield' }}
+            />
+            <span className="text-sm text-slate-700 dark:text-slate-300">/ {totalPages}</span>
             <button
               disabled={currentPage >= totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
@@ -446,7 +522,7 @@ const UserProfile = () => {
                         </button>
                         <button
                           onClick={() => handleDeleteClick(customer.customerId || customer.id, customer.customerId || customer.id || 'pelanggan ini')}
-                          className="rounded-lg bg-red-500/20 border border-red-500/30 p-2 text-red-400 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-red-500/30"
+                          className="rounded-lg bg-red-500/20 border border-red-500/30 p-1.5 text-red-400 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-red-500/30"
                           title="Hapus"
                         >
                           <Trash2 size={16} />
@@ -458,29 +534,42 @@ const UserProfile = () => {
               )}
             </tbody>
           </table>
-        </div>
-      </div>
-
-      {/* Desktop pagination */}
-      <div className="flex items-center justify-between gap-3 p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60">
-        <div className="text-sm text-slate-600 dark:text-slate-400">Menampilkan {Math.min(filteredCustomers.length, pageSize)} dari {filteredCustomers.length} hasil</div>
-        <div className="flex items-center gap-2">
-          <button
-            disabled={currentPage <= 1}
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            className="rounded px-3 py-1 text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 disabled:opacity-50"
-          >Prev</button>
-          <div className="text-sm text-slate-700 dark:text-slate-300 px-3">{currentPage} / {totalPages}</div>
-          <button
-            disabled={currentPage >= totalPages}
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            className="rounded px-3 py-1 text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 disabled:opacity-50"
-          >Next</button>
-          <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="ml-2 rounded bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm text-slate-700 dark:text-slate-300 px-2 py-1">
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-          </select>
+          {/* Desktop pagination - now attached to table */}
+          <div className="flex items-center justify-between gap-3 p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60">
+            <div className="text-sm text-slate-600 dark:text-slate-400">Menampilkan {Math.min(filteredCustomers.length, pageSize)} dari {filteredCustomers.length} hasil</div>
+            <div className="flex items-center gap-2">
+              <button
+                disabled={currentPage <= 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                className="rounded px-3 py-1 text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 disabled:opacity-50"
+              >Prev</button>
+              <input
+                type="number"
+                min={1}
+                max={totalPages}
+                value={currentPage}
+                onChange={e => {
+                  let val = Number(e.target.value);
+                  if (isNaN(val)) val = 1;
+                  val = Math.max(1, Math.min(totalPages, val));
+                  setCurrentPage(val);
+                }}
+                className="w-14 text-center rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-700 dark:text-slate-300 px-2 py-1 focus:ring-2 focus:ring-cyan-500 outline-none"
+                style={{ WebkitAppearance: 'none', MozAppearance: 'textfield' }}
+              />
+              <span className="text-sm text-slate-700 dark:text-slate-300">/ {totalPages}</span>
+              <button
+                disabled={currentPage >= totalPages}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                className="rounded px-3 py-1 text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 disabled:opacity-50"
+              >Next</button>
+              <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="ml-2 rounded bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm text-slate-700 dark:text-slate-300 px-2 py-1">
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 

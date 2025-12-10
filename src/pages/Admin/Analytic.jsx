@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect } from 'react'
 import { BarChart3, TrendingUp, Users, Package } from 'lucide-react'
 import { getAnalytics } from '../../services/api'
+import ExportAllData from '../../components/ExportAllData'
 
 const Analytic = () => {
   const [loading, setLoading] = useState(true)
@@ -56,9 +56,14 @@ const Analytic = () => {
   return (
     <div className="space-y-8 animate-fade-in-up text-slate-900 dark:text-white">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Analytics Dashboard</h1>
-        <p className="mt-1 text-slate-700 dark:text-slate-400">Analisis behaviour trends dan efektivitas produk</p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Analytics Dashboard</h1>
+          <p className="mt-1 text-slate-700 dark:text-slate-400">Analisis behaviour trends dan efektivitas produk</p>
+        </div>
+        <div className="flex gap-2">
+          <ExportAllData />
+        </div>
       </div>
 
       {/* Tab Bar */}

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import Toast from '../../components/Toast';
+import ImportFile from '../../components/ImportFile';
 import { createPortal } from 'react-dom'
 import { getPackages, createPackage, updatePackage, deletePackage } from '../../services/api'
 import { Search, Plus, Edit2, Trash2, X } from 'lucide-react'
@@ -33,7 +35,8 @@ const Product = () => {
     minutes: '',
     sms: '',
     vodCapacity: ''
-  })
+  });
+  const [toast, setToast] = useState(null);
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
@@ -175,15 +178,61 @@ const Product = () => {
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Product Management</h1>
           <p className="mt-1 text-slate-600 dark:text-slate-400">Kelola dan tambah produk baru</p>
         </div>
-        <button
-          onClick={handleAddPackage}
-          className="flex items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2 text-white transition hover:bg-cyan-500 hover:shadow-lg hover:shadow-cyan-500/30"
-        >
-          <Plus size={20} />
-          Tambah Produk
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleAddPackage}
+            className="flex items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2 text-white transition hover:bg-cyan-500 hover:shadow-lg hover:shadow-cyan-500/30"
+          >
+            <Plus size={20} />
+            Tambah Produk
+          </button>
+          <ImportFile
+            label="Import Produk CSV/XLSX"
+            templateFields={[
+              "product_id",
+              "product_name",
+              "category",
+              "price",
+              "duration_days",
+              "product_capacity_gb",
+              "product_capacity_minutes",
+              "product_capacity_sms",
+              "product_capacity_vod",
+              "description"
+            ]}
+            onImport={async (rows) => {
+              let success = 0;
+              let fail = 0;
+              for (const row of rows) {
+                let newRow = { ...row };
+                if (!newRow.product_id || newRow.product_id === '') {
+                  newRow.product_id = `PRD${Date.now()}${Math.floor(Math.random()*10000)}`;
+                }
+                try {
+                  await createPackage(newRow);
+                  success++;
+                } catch (e) {
+                  fail++;
+                }
+              }
+              const data = await getPackages();
+              setPackages(sortPackages(data));
+              setToast({
+                message: `Import selesai: ${success} berhasil${fail > 0 ? ", " + fail + " gagal" : ""}`,
+                type: fail > 0 ? 'error' : 'success'
+              });
+            }}
+          />
+        </div>
       </div>
 
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
       {/* Statistics Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-4 shadow-lg">
@@ -425,25 +474,39 @@ const Product = () => {
         {/* Desktop pagination */}
       <div className="flex items-center justify-between gap-3 p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60">
         <div className="text-sm text-slate-600 dark:text-slate-400">Menampilkan {Math.min(filteredPackages.length, pageSize)} dari {filteredPackages.length} hasil</div>
-          <div className="flex items-center gap-2">
-            <button
-              disabled={currentPage <= 1}
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+        <div className="flex items-center gap-2">
+          <button
+            disabled={currentPage <= 1}
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             className="rounded px-3 py-1 text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 disabled:opacity-50"
-            >Prev</button>
-          <div className="text-sm text-slate-700 dark:text-slate-300 px-3">{currentPage} / {totalPages}</div>
-            <button
-              disabled={currentPage >= totalPages}
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+          >Prev</button>
+          <input
+            type="number"
+            min={1}
+            max={totalPages}
+            value={currentPage}
+            onChange={e => {
+              let val = Number(e.target.value);
+              if (isNaN(val)) val = 1;
+              val = Math.max(1, Math.min(totalPages, val));
+              setCurrentPage(val);
+            }}
+            className="w-14 text-center rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-700 dark:text-slate-300 px-2 py-1 focus:ring-2 focus:ring-cyan-500 outline-none"
+            style={{ WebkitAppearance: 'none', MozAppearance: 'textfield' }}
+          />
+          <span className="text-sm text-slate-700 dark:text-slate-300">/ {totalPages}</span>
+          <button
+            disabled={currentPage >= totalPages}
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             className="rounded px-3 py-1 text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 disabled:opacity-50"
-            >Next</button>
+          >Next</button>
           <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="ml-2 rounded bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm text-slate-700 dark:text-slate-300 px-2 py-1">
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-            </select>
-          </div>
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+          </select>
         </div>
+      </div>
       </div>
 
       {/* Modal */}
