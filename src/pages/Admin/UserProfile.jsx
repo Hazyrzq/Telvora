@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { getCustomers, getCustomerInsights } from '../../services/api'
-import { Search, X, AlertTriangle, Sparkles, ChevronRight } from 'lucide-react'
+import { getCustomers, getCustomerInsights, createCustomer, deleteCustomer } from '../../services/api'
+import { Search, X, AlertTriangle, Sparkles, ChevronRight, Plus, Trash2 } from 'lucide-react'
+import ConfirmDialog from '../../components/ConfirmDialog'
 
 const UserProfile = () => {
   const [customers, setCustomers] = useState([])
@@ -17,19 +18,37 @@ const UserProfile = () => {
   const [userCategory, setUserCategory] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+  const [showModal, setShowModal] = useState(false)
+  const [isModalClosing, setIsModalClosing] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, id: null, name: '' })
+  const [formData, setFormData] = useState({
+    customer_id: '',
+    plan_type: 'Prepaid',
+    device_brand: '',
+    avg_data_usage_gb: '',
+    pct_video_usage: '',
+    avg_call_duration: '',
+    sms_freq: '',
+    monthly_spend: '',
+    topup_freq: '',
+    travel_score: '',
+    complaint_count: '0',
+    target_offer: 'General Offer'
+  })
+
+  const fetchCustomers = async () => {
+    try {
+      setLoading(true)
+      const data = await getCustomers()
+      setCustomers(data)
+    } catch (error) {
+      console.error('Error fetching customers:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const fetchCustomers = async () => {
-      try {
-        setLoading(true)
-        const data = await getCustomers()
-        setCustomers(data)
-      } catch (error) {
-        console.error('Error fetching customers:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
     fetchCustomers()
   }, [])
 
@@ -87,6 +106,95 @@ const UserProfile = () => {
     }
   }
 
+  const handleAddCustomer = () => {
+    setFormData({
+      customer_id: '',
+      plan_type: 'Prepaid',
+      device_brand: '',
+      avg_data_usage_gb: '',
+      pct_video_usage: '',
+      avg_call_duration: '',
+      sms_freq: '',
+      monthly_spend: '',
+      topup_freq: '',
+      travel_score: '',
+      complaint_count: '0',
+      target_offer: 'General Offer'
+    })
+    setShowModal(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalClosing(true)
+    setTimeout(() => {
+      setShowModal(false)
+      setIsModalClosing(false)
+    }, 400)
+  }
+
+  const handleFormChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
+  const handleSaveCustomer = async () => {
+    try {
+      // Validate required fields
+      if (!formData.customer_id) {
+        alert('Customer ID harus diisi')
+        return
+      }
+
+      // Convert form data to database format
+      const customerData = {
+        customer_id: formData.customer_id,
+        plan_type: formData.plan_type || null,
+        device_brand: formData.device_brand || null,
+        avg_data_usage_gb: formData.avg_data_usage_gb ? parseFloat(formData.avg_data_usage_gb) : null,
+        pct_video_usage: formData.pct_video_usage ? parseFloat(formData.pct_video_usage) / 100 : null, // Convert percentage to decimal
+        avg_call_duration: formData.avg_call_duration ? parseFloat(formData.avg_call_duration) : null,
+        sms_freq: formData.sms_freq ? parseInt(formData.sms_freq) : null,
+        monthly_spend: formData.monthly_spend ? parseFloat(formData.monthly_spend) : null,
+        topup_freq: formData.topup_freq ? parseInt(formData.topup_freq) : null,
+        travel_score: formData.travel_score ? parseFloat(formData.travel_score) : null,
+        complaint_count: formData.complaint_count ? parseInt(formData.complaint_count) : 0,
+        target_offer: formData.target_offer || null
+      }
+
+      await createCustomer(customerData)
+      await fetchCustomers()
+      handleCloseModal()
+    } catch (error) {
+      console.error('Error saving customer:', error)
+      alert('Gagal menyimpan data pelanggan. Pastikan Customer ID unik.')
+    }
+  }
+
+  const handleDeleteClick = (id, name) => {
+    setDeleteConfirm({ isOpen: true, id, name })
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm.id) return
+    
+    try {
+      const success = await deleteCustomer(deleteConfirm.id)
+      if (success) {
+        await fetchCustomers()
+      } else {
+        alert('Gagal menghapus pelanggan')
+      }
+    } catch (error) {
+      console.error('Error deleting customer:', error)
+      alert('Gagal menghapus pelanggan')
+    } finally {
+      setDeleteConfirm({ isOpen: false, id: null, name: '' })
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
@@ -106,6 +214,13 @@ const UserProfile = () => {
           <h1 className="text-3xl font-bold text-white tracking-tight">User Profile</h1>
           <p className="mt-1 text-slate-400">Kelola dan analisis data pelanggan</p>
         </div>
+        <button
+          onClick={handleAddCustomer}
+          className="flex items-center gap-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-lg hover:shadow-cyan-500/30"
+        >
+          <Plus size={18} />
+          Tambah Pelanggan
+        </button>
       </div>
 
       {/* Statistics Cards */}
@@ -168,12 +283,21 @@ const UserProfile = () => {
                   <h3 className="text-base font-bold text-white mb-1">{customer.customerId || customer.id || 'N/A'}</h3>
                   <p className="text-xs text-slate-400">{customer.device || 'N/A'}</p>
                 </div>
-                <button
-                  onClick={() => openAnalysis(customer)}
-                  className="rounded-lg bg-cyan-600 hover:bg-cyan-500 px-3 py-1.5 text-xs font-semibold text-white transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-lg hover:shadow-cyan-500/30 ml-2"
-                >
-                  Analisis
-                </button>
+                <div className="flex gap-2 ml-2">
+                  <button
+                    onClick={() => openAnalysis(customer)}
+                    className="rounded-lg bg-cyan-600 hover:bg-cyan-500 px-3 py-1.5 text-xs font-semibold text-white transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-lg hover:shadow-cyan-500/30"
+                  >
+                    Analisis
+                  </button>
+                  <button
+                    onClick={() => handleDeleteClick(customer.customerId || customer.id, customer.customerId || customer.id || 'pelanggan ini')}
+                    className="rounded-lg bg-red-500/20 border border-red-500/30 p-1.5 text-red-400 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-red-500/30"
+                    title="Hapus"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-2 mb-3">
@@ -302,12 +426,21 @@ const UserProfile = () => {
                       {customer.complaintCount || 0}
                     </td>
                     <td className="px-4 py-4 text-center whitespace-nowrap">
-                      <button
-                        onClick={() => openAnalysis(customer)}
-                        className="rounded-lg bg-cyan-600 hover:bg-cyan-500 px-3 py-1.5 text-xs font-semibold text-white transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-lg hover:shadow-cyan-500/30"
-                      >
-                        Analisis
-                      </button>
+                      <div className="flex justify-center gap-2">
+                        <button
+                          onClick={() => openAnalysis(customer)}
+                          className="rounded-lg bg-cyan-600 hover:bg-cyan-500 px-3 py-1.5 text-xs font-semibold text-white transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-lg hover:shadow-cyan-500/30"
+                        >
+                          Analisis
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(customer.customerId || customer.id, customer.customerId || customer.id || 'pelanggan ini')}
+                          className="rounded-lg bg-red-500/20 border border-red-500/30 p-2 text-red-400 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-red-500/30"
+                          title="Hapus"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -516,6 +649,248 @@ const UserProfile = () => {
         </div>,
         document.body
       )}
+
+      {/* Add Customer Modal */}
+      {showModal && createPortal(
+        <div 
+          className={`fixed inset-0 flex items-start justify-end p-0 ${isModalClosing ? 'animate-fade-out-overlay' : 'animate-fade-in-overlay'}`}
+          style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 99999,
+            opacity: 1
+          }}
+          onClick={handleCloseModal}
+        >
+          <div
+            className={`relative h-full w-full max-w-2xl md:max-w-xl lg:max-w-2xl rounded-l-xl border-l border-slate-800 bg-slate-900 p-4 sm:p-6 shadow-2xl overflow-y-auto ${isModalClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+            onClick={(e) => e.stopPropagation()}
+            style={{ 
+              zIndex: 100000,
+              position: 'relative',
+              opacity: 1,
+              backgroundColor: 'rgb(15 23 42)',
+              color: 'white',
+              display: 'block',
+              visibility: 'visible',
+              transition: 'transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.5s cubic-bezier(0.23, 1, 0.32, 1)'
+            }}
+          >
+            {/* Modal Header */}
+            <div className="mb-6 flex items-center justify-between border-b border-slate-800 pb-4">
+              <h2 className="text-2xl font-bold text-white tracking-tight">Tambah Pelanggan Baru</h2>
+              <button
+                onClick={handleCloseModal}
+                className="rounded-lg text-slate-400 transition hover:bg-slate-800 hover:text-white p-1"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="max-h-[calc(90vh-200px)] space-y-4 overflow-y-auto">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Customer ID <span className="text-red-400">*</span></label>
+                <input
+                  type="text"
+                  name="customer_id"
+                  value={formData.customer_id}
+                  onChange={handleFormChange}
+                  placeholder="C00001"
+                  className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                  required
+                />
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Plan Type</label>
+                  <select
+                    name="plan_type"
+                    value={formData.plan_type}
+                    onChange={handleFormChange}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                  >
+                    <option value="Prepaid">Prepaid</option>
+                    <option value="Postpaid">Postpaid</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Device Brand</label>
+                  <input
+                    type="text"
+                    name="device_brand"
+                    value={formData.device_brand}
+                    onChange={handleFormChange}
+                    placeholder="Samsung, Apple, Xiaomi, dll"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Data Usage (GB)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    name="avg_data_usage_gb"
+                    value={formData.avg_data_usage_gb}
+                    onChange={handleFormChange}
+                    placeholder="0.0"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Video Usage (%)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="100"
+                    name="pct_video_usage"
+                    value={formData.pct_video_usage}
+                    onChange={handleFormChange}
+                    placeholder="0.0"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Call Duration (menit)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    name="avg_call_duration"
+                    value={formData.avg_call_duration}
+                    onChange={handleFormChange}
+                    placeholder="0.0"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">SMS Frequency</label>
+                  <input
+                    type="number"
+                    name="sms_freq"
+                    value={formData.sms_freq}
+                    onChange={handleFormChange}
+                    placeholder="0"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Monthly Spend (Rp)</label>
+                  <input
+                    type="number"
+                    name="monthly_spend"
+                    value={formData.monthly_spend}
+                    onChange={handleFormChange}
+                    placeholder="0"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Top Up Frequency (x/bln)</label>
+                  <input
+                    type="number"
+                    name="topup_freq"
+                    value={formData.topup_freq}
+                    onChange={handleFormChange}
+                    placeholder="0"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Travel Score</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="travel_score"
+                    value={formData.travel_score}
+                    onChange={handleFormChange}
+                    placeholder="0.00"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Complaint Count</label>
+                  <input
+                    type="number"
+                    name="complaint_count"
+                    value={formData.complaint_count}
+                    onChange={handleFormChange}
+                    placeholder="0"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Target Offer</label>
+                <select
+                  name="target_offer"
+                  value={formData.target_offer}
+                  onChange={handleFormChange}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                >
+                  <option value="General Offer">General Offer</option>
+                  <option value="churn_prevention">Churn Prevention</option>
+                  <option value="upsell">Upsell</option>
+                  <option value="cross_sell">Cross Sell</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="mt-6 flex justify-end gap-3 border-t border-slate-800 pt-4">
+              <button
+                onClick={handleCloseModal}
+                className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-slate-300 transition hover:bg-slate-700 hover:text-white"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleSaveCustomer}
+                className="rounded-lg bg-cyan-600 px-4 py-2 text-white transition hover:bg-cyan-500 hover:shadow-lg hover:shadow-cyan-500/30"
+              >
+                Tambah Pelanggan
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Confirm Delete Dialog */}
+      <ConfirmDialog
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => setDeleteConfirm({ isOpen: false, id: null, name: '' })}
+        onConfirm={handleDeleteConfirm}
+        title="Hapus Pelanggan"
+        message={`Apakah Anda yakin ingin menghapus pelanggan "${deleteConfirm.name}"? Tindakan ini tidak dapat dibatalkan.`}
+        confirmText="Ya, Hapus"
+        cancelText="Batal"
+        type="danger"
+      />
     </div>
   )
 }
