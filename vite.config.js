@@ -41,7 +41,7 @@ export default defineConfig({
       },
       pwaAssets: {
         disabled: false,
-        image: 'public/favicon.svg',
+        image: 'public/logo.png',
         publicDir: 'public',
         includeManifestIcons: true
       }
@@ -56,9 +56,6 @@ export default defineConfig({
     port: 5174,
   },
 })
-
-
-
 
 
 
