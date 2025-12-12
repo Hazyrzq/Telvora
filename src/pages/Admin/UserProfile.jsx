@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import Toast from '../../components/Toast';
 import ImportFile from '../../components/ImportFile';
 import { createPortal } from 'react-dom'
-import { getCustomers, getCustomerInsights, createCustomer, deleteCustomer, predictCustomerOfferML } from '../../services/api'
+import { getCustomers, getCustomerInsights, createCustomer, updateCustomer, deleteCustomer, predictCustomerOfferML } from '../../services/api'
 import { Search, X, AlertTriangle, Sparkles, ChevronRight, Plus, Trash2 } from 'lucide-react'
 import ConfirmDialog from '../../components/ConfirmDialog'
 
@@ -66,7 +66,7 @@ const UserProfile = () => {
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchTerm, customers, pageSize])
+  }, [searchTerm, pageSize])
 
   const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / pageSize))
   const paginatedCustomers = filteredCustomers.slice((currentPage - 1) * pageSize, currentPage * pageSize)
@@ -100,6 +100,25 @@ const UserProfile = () => {
       setChurnInsight(data.churn || null)
       setAiInsights(data.ai_insights || null)
       setUserCategory(data.user_category || '')
+
+      // 🎯 Fix: Update customer target_offer in DB with the analysis result
+      if (data.churn?.raw_label && customerId) {
+        try {
+          await updateCustomer(customerId, {
+            target_offer: data.churn.raw_label
+          })
+          // Optional: Update local state if needed (not strictly required as we just viewed it)
+          // But good for the table view update behind the modal
+          setCustomers(prev => prev.map(c =>
+            (c.customerId === customerId || c.id === customerId)
+              ? { ...c, targetOffer: data.churn.raw_label, target_offer: data.churn.raw_label }
+              : c
+          ))
+        } catch (err) {
+          console.error("Failed to update target_offer after analysis", err)
+        }
+      }
+
     } catch (error) {
       console.error('Failed to load customer insights', error)
     } finally {
@@ -186,15 +205,6 @@ const UserProfile = () => {
         complaint_count: formData.complaint_count ? parseInt(formData.complaint_count) : 0,
       }
 
-      // Get ML prediction untuk target offer (PURE ML, tidak dari DB)
-      let mlPrediction = null
-      try {
-        mlPrediction = await predictCustomerOfferML(userProfileForML)
-        console.log('✅ ML Prediction result:', mlPrediction)
-      } catch (error) {
-        console.warn('⚠️ ML prediction gagal, target_offer akan null (user harus run ML inference manual)', error)
-      }
-
       // Convert form data ke database format
       const customerData = {
         customer_id: customerId,
@@ -208,9 +218,8 @@ const UserProfile = () => {
         topup_freq: formData.topup_freq ? parseInt(formData.topup_freq) : null,
         travel_score: formData.travel_score ? parseFloat(formData.travel_score) : null,
         complaint_count: formData.complaint_count ? parseInt(formData.complaint_count) : 0,
-        // 🎯 Store ML prediction result jika tersedia
-        // Catatan: target_offer column di DB adalah untuk informasi, tapi UI SELALU gunakan ML prediction
-        target_offer: mlPrediction?.pred_target_offer || null
+        // 🎯 Fix: Set target_offer to null initially.
+        target_offer: null
       }
 
       await createCustomer(customerData)
@@ -227,7 +236,7 @@ const UserProfile = () => {
 
   const handleDeleteConfirm = async () => {
     if (!deleteConfirm.id) return
-    
+
     try {
       const success = await deleteCustomer(deleteConfirm.id)
       if (success) {
@@ -504,8 +513,8 @@ const UserProfile = () => {
                 </tr>
               ) : (
                 paginatedCustomers.map((customer, idx) => (
-                  <tr 
-                    key={customer.id || customer.customerId || idx} 
+                  <tr
+                    key={customer.id || customer.customerId || idx}
                     className="border-b border-slate-200 dark:border-slate-800 transition hover:bg-slate-100 dark:hover:bg-slate-800/30 animate-fade-in-up"
                     style={{ animationDelay: `${idx * 50}ms` }}
                   >
@@ -609,13 +618,13 @@ const UserProfile = () => {
 
       {/* Analysis Modal */}
       {(showAnalysis || selectedCustomer) && createPortal(
-        <div 
+        <div
           className={`fixed inset-0 flex items-start justify-end p-0 ${isClosing ? 'animate-fade-out-overlay' : 'animate-fade-in-overlay'}`}
-          style={{ 
-            position: 'fixed', 
-            top: 0, 
-            left: 0, 
-            right: 0, 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
             bottom: 0,
             backgroundColor: 'rgba(0, 0, 0, 0.75)',
             backdropFilter: 'blur(4px)',
@@ -627,7 +636,7 @@ const UserProfile = () => {
           <div
             className={`relative h-full w-full max-w-2xl md:max-w-xl lg:max-w-2xl rounded-l-xl border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white p-4 sm:p-6 shadow-2xl overflow-y-auto ${isClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
             onClick={(e) => e.stopPropagation()}
-            style={{ 
+            style={{
               zIndex: 100000,
               position: 'relative',
               opacity: 1,
@@ -650,117 +659,124 @@ const UserProfile = () => {
 
             {/* Modal Body */}
             {selectedCustomer ? (
-            <div className="space-y-6">
-              {/* Customer Info */}
-              <div className="rounded-xl bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 border border-slate-200 dark:border-slate-700 p-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                      {selectedCustomer.customerId || selectedCustomer.id || 'N/A'}
-                    </h3>
-                    <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">Plan: <span className="font-semibold text-cyan-600 dark:text-cyan-400">{selectedCustomer.planType || 'N/A'}</span></p>
-                    <p className="text-sm text-slate-700 dark:text-slate-300">Device: <span className="font-semibold text-cyan-600 dark:text-cyan-400">{selectedCustomer.device || 'N/A'}</span></p>
-                  </div>
-                  {userCategory && (
-                    <span className="inline-flex items-center gap-2 rounded-full bg-cyan-500/15 border border-cyan-500/30 px-3 py-1 text-xs font-semibold text-cyan-600 dark:text-cyan-300">
-                      <Sparkles size={14} /> {userCategory}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Churn Risk */}
-              <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/70 p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10 text-red-500 dark:text-red-400">
-                      <AlertTriangle size={20} />
-                    </div>
+              <div className="space-y-6">
+                {/* Customer Info */}
+                <div className="rounded-xl bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 border border-slate-200 dark:border-slate-700 p-4">
+                  <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-sm text-slate-700 dark:text-slate-300">Estimated churn rate</p>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-3xl font-bold text-slate-900 dark:text-white">{((churnInsight?.probability || 0) * 100).toFixed(1)}%</span>
-                        <span className="text-xs font-semibold uppercase px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30">
-                          {churnInsight?.label === 'high' ? 'High' : churnInsight?.label === 'medium' ? 'Medium' : 'Low'}
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                        {selectedCustomer.customerId || selectedCustomer.id || 'N/A'}
+                      </h3>
+                      <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">Plan: <span className="font-semibold text-cyan-600 dark:text-cyan-400">{selectedCustomer.planType || 'N/A'}</span></p>
+                      <p className="text-sm text-slate-700 dark:text-slate-300">Device: <span className="font-semibold text-cyan-600 dark:text-cyan-400">{selectedCustomer.device || 'N/A'}</span></p>
+                    </div>
+                    {userCategory && (
+                      <span className="inline-flex items-center gap-2 rounded-full bg-cyan-500/15 border border-cyan-500/30 px-3 py-1 text-xs font-semibold text-cyan-600 dark:text-cyan-300">
+                        <Sparkles size={14} /> {userCategory}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Churn Risk */}
+                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/70 p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-full ${churnInsight?.label === 'high'
+                        ? 'bg-red-500/10 text-red-500 dark:text-red-400'
+                        : churnInsight?.label === 'medium'
+                          ? 'bg-amber-500/10 text-amber-500 dark:text-amber-400'
+                          : 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400'
+                        }`}>
+                        <AlertTriangle size={20} />
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-700 dark:text-slate-300 mb-2">Churn Risk Level</p>
+                        <span className={`inline-flex text-sm font-semibold uppercase px-3 py-1.5 rounded-full border ${churnInsight?.label === 'high'
+                          ? 'bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30'
+                          : churnInsight?.label === 'medium'
+                            ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                            : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                          }`}>
+                          {churnInsight?.label === 'high' ? 'High Risk' : churnInsight?.label === 'medium' ? 'Medium Risk' : 'Low Risk'}
                         </span>
                       </div>
                     </div>
+                    <div className="text-right text-sm text-slate-600 dark:text-slate-400">
+                      <p>Risk label</p>
+                      <p className="font-semibold text-slate-900 dark:text-white">{insightLoading ? 'Loading...' : (churnInsight?.raw_label || 'General Offer')}</p>
+                    </div>
                   </div>
-                  <div className="text-right text-sm text-slate-600 dark:text-slate-400">
-                    <p>Risk label</p>
-                    <p className="font-semibold text-slate-900 dark:text-white">{insightLoading ? 'Loading...' : (churnInsight?.raw_label || 'General Offer')}</p>
+                  <div className="mt-4 rounded-lg bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 p-4">
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white mb-2">AI Risk Analysis</p>
+                    <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                      {aiInsights?.churn_analysis || 'Analisis churn belum tersedia untuk pelanggan ini.'}
+                    </p>
                   </div>
                 </div>
-                <div className="mt-4 rounded-lg bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 p-4">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white mb-2">AI Risk Analysis</p>
-                  <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                    {aiInsights?.churn_analysis || 'Analisis churn belum tersedia untuk pelanggan ini.'}
-                  </p>
-                </div>
-              </div>
 
-              {/* Recommendations */}
-              <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/70 p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2 text-white">
-                    <Sparkles size={18} className="text-cyan-600 dark:text-cyan-300" />
-                    <h4 className="text-lg font-bold text-slate-900 dark:text-white">Product Recommendations</h4>
+                {/* Recommendations */}
+                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/70 p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2 text-white">
+                      <Sparkles size={18} className="text-cyan-600 dark:text-cyan-300" />
+                      <h4 className="text-lg font-bold text-slate-900 dark:text-white">Product Recommendations</h4>
+                    </div>
+                    {insightLoading && <span className="text-xs text-slate-600 dark:text-slate-400">Memuat rekomendasi...</span>}
                   </div>
-                  {insightLoading && <span className="text-xs text-slate-600 dark:text-slate-400">Memuat rekomendasi...</span>}
-                </div>
-                <div className="space-y-3">
-                  {(recommendations || []).map((item, idx) => (
-                    <div key={`${item.product_name}-${idx}`} className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-3 flex gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold">#{idx + 1}</div>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-slate-900 dark:text-white">{item.product_name}</p>
-                        <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                          {item.category} · {item.duration_days} days · Rp {Number(item.price || 0).toLocaleString('id-ID')}
+                  <div className="space-y-3">
+                    {(recommendations || []).map((item, idx) => (
+                      <div key={`${item.product_name}-${idx}`} className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-3 flex gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold">#{idx + 1}</div>
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-slate-900 dark:text-white">{item.product_name}</p>
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                            {item.category} · {item.duration_days} days · Rp {Number(item.price || 0).toLocaleString('id-ID')}
+                          </p>
+                          {item.reasons?.length > 0 && (
+                            <p className="text-xs text-slate-700 dark:text-slate-300 mt-2">{item.reasons[0]}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 rounded-lg bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5"><Sparkles size={16} className="text-cyan-600 dark:text-cyan-300" /></div>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white mb-1">AI Analysis</p>
+                        <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                          {aiInsights?.product_recommendation || 'Analisis AI belum tersedia untuk pelanggan ini.'}
                         </p>
-                        {item.reasons?.length > 0 && (
-                          <p className="text-xs text-slate-700 dark:text-slate-300 mt-2">{item.reasons[0]}</p>
-                        )}
                       </div>
                     </div>
-                  ))}
+                  </div>
                 </div>
-                <div className="mt-4 rounded-lg bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5"><Sparkles size={16} className="text-cyan-600 dark:text-cyan-300" /></div>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900 dark:text-white mb-1">AI Analysis</p>
-                      <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                        {aiInsights?.product_recommendation || 'Analisis AI belum tersedia untuk pelanggan ini.'}
-                      </p>
-                    </div>
+
+                {/* Usage Pattern & Finance */}
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-4">
+                    <h4 className="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">Pola Penggunaan <ChevronRight size={14} className="text-slate-400" /></h4>
+                    <ul className="space-y-2 text-sm text-slate-700 dark:text-slate-300">
+                      <li>📊 Data: <span className="font-semibold text-slate-900 dark:text-white">{(selectedCustomer.dataUsage || 0).toFixed(1)} GB</span></li>
+                      <li>🎬 Video: <span className="font-semibold text-slate-900 dark:text-white">{parseFloat(selectedCustomer.videoPercentage || 0).toFixed(1)}%</span></li>
+                      <li>📞 Panggilan: <span className="font-semibold text-slate-900 dark:text-white">{parseFloat(selectedCustomer.callMinutes || 0).toFixed(1)} menit</span></li>
+                      <li>💬 SMS: <span className="font-semibold text-slate-900 dark:text-white">{selectedCustomer.smsCount || 0}</span></li>
+                      <li>🌍 Travel Score: <span className="font-semibold text-slate-900 dark:text-white">{parseFloat(selectedCustomer.travelScore || 0).toFixed(2)}</span></li>
+                    </ul>
+                  </div>
+
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-4">
+                    <h4 className="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">Detail Finansial <ChevronRight size={14} className="text-slate-400" /></h4>
+                    <ul className="space-y-2 text-sm text-slate-700 dark:text-slate-300">
+                      <li>💰 Pengeluaran Bulanan: <span className="font-semibold text-slate-900 dark:text-white">Rp {(selectedCustomer.totalSpend || 0).toLocaleString('id-ID')}</span></li>
+                      <li>💳 Top-up Frekuensi: <span className="font-semibold text-slate-900 dark:text-white">{selectedCustomer.topupFreq || 0}x</span></li>
+                      <li>⚠️ Jumlah Keluhan: <span className="font-semibold text-slate-900 dark:text-white">{selectedCustomer.complaintCount || 0}</span></li>
+                      <li>🎯 Target Offer: <span className="font-semibold text-cyan-600 dark:text-cyan-400">{userCategory || 'Loading...'}</span></li>
+                    </ul>
                   </div>
                 </div>
               </div>
-
-              {/* Usage Pattern & Finance */}
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-4">
-                  <h4 className="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">Pola Penggunaan <ChevronRight size={14} className="text-slate-400" /></h4>
-                  <ul className="space-y-2 text-sm text-slate-700 dark:text-slate-300">
-                    <li>📊 Data: <span className="font-semibold text-slate-900 dark:text-white">{(selectedCustomer.dataUsage || 0).toFixed(1)} GB</span></li>
-                    <li>🎬 Video: <span className="font-semibold text-slate-900 dark:text-white">{parseFloat(selectedCustomer.videoPercentage || 0).toFixed(1)}%</span></li>
-                    <li>📞 Panggilan: <span className="font-semibold text-slate-900 dark:text-white">{parseFloat(selectedCustomer.callMinutes || 0).toFixed(1)} menit</span></li>
-                    <li>💬 SMS: <span className="font-semibold text-slate-900 dark:text-white">{selectedCustomer.smsCount || 0}</span></li>
-                    <li>🌍 Travel Score: <span className="font-semibold text-slate-900 dark:text-white">{parseFloat(selectedCustomer.travelScore || 0).toFixed(2)}</span></li>
-                  </ul>
-                </div>
-
-                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-4">
-                  <h4 className="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">Detail Finansial <ChevronRight size={14} className="text-slate-400" /></h4>
-                  <ul className="space-y-2 text-sm text-slate-700 dark:text-slate-300">
-                    <li>💰 Pengeluaran Bulanan: <span className="font-semibold text-slate-900 dark:text-white">Rp {(selectedCustomer.totalSpend || 0).toLocaleString('id-ID')}</span></li>
-                    <li>💳 Top-up Frekuensi: <span className="font-semibold text-slate-900 dark:text-white">{selectedCustomer.topupFreq || 0}x</span></li>
-                    <li>⚠️ Jumlah Keluhan: <span className="font-semibold text-slate-900 dark:text-white">{selectedCustomer.complaintCount || 0}</span></li>
-                    <li>🎯 Target Offer: <span className="font-semibold text-cyan-600 dark:text-cyan-400">{userCategory || 'Loading...'}</span></li>
-                  </ul>
-                </div>
-              </div>
-            </div>
             ) : (
               <div className="text-center py-8">
                 <p className="text-slate-400">Memuat data pelanggan...</p>
@@ -784,13 +800,13 @@ const UserProfile = () => {
 
       {/* Add Customer Modal */}
       {showModal && createPortal(
-        <div 
+        <div
           className={`fixed inset-0 flex items-start justify-end p-0 ${isModalClosing ? 'animate-fade-out-overlay' : 'animate-fade-in-overlay'}`}
-          style={{ 
-            position: 'fixed', 
-            top: 0, 
-            left: 0, 
-            right: 0, 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
             bottom: 0,
             backgroundColor: 'rgba(0, 0, 0, 0.55)',
             backdropFilter: 'blur(4px)',
@@ -802,7 +818,7 @@ const UserProfile = () => {
           <div
             className={`relative h-full w-full max-w-2xl md:max-w-xl lg:max-w-2xl rounded-l-xl border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-2xl overflow-y-auto ${isModalClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
             onClick={(e) => e.stopPropagation()}
-            style={{ 
+            style={{
               zIndex: 100000,
               position: 'relative',
               opacity: 1,
@@ -843,12 +859,12 @@ const UserProfile = () => {
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Plan Type</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Plan Type</label>
                   <select
                     name="plan_type"
                     value={formData.plan_type}
                     onChange={handleFormChange}
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                   >
                     <option value="Prepaid">Prepaid</option>
                     <option value="Postpaid">Postpaid</option>
@@ -856,21 +872,21 @@ const UserProfile = () => {
                 </div>
 
                 <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Device Brand</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Device Brand</label>
                   <input
                     type="text"
                     name="device_brand"
                     value={formData.device_brand}
                     onChange={handleFormChange}
                     placeholder="Samsung, Apple, Xiaomi, dll"
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                   />
                 </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Data Usage (GB)</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Data Usage (GB)</label>
                   <input
                     type="number"
                     step="0.1"
@@ -878,12 +894,12 @@ const UserProfile = () => {
                     value={formData.avg_data_usage_gb}
                     onChange={handleFormChange}
                     placeholder="0.0"
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                   />
                 </div>
 
                 <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Video Usage (%)</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Video Usage (%)</label>
                   <input
                     type="number"
                     step="0.1"
@@ -893,14 +909,14 @@ const UserProfile = () => {
                     value={formData.pct_video_usage}
                     onChange={handleFormChange}
                     placeholder="0.0"
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                   />
                 </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Call Duration (menit)</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Call Duration (menit)</label>
                   <input
                     type="number"
                     step="0.1"
@@ -908,52 +924,52 @@ const UserProfile = () => {
                     value={formData.avg_call_duration}
                     onChange={handleFormChange}
                     placeholder="0.0"
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                   />
                 </div>
 
                 <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">SMS Frequency</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">SMS Frequency</label>
                   <input
                     type="number"
                     name="sms_freq"
                     value={formData.sms_freq}
                     onChange={handleFormChange}
                     placeholder="0"
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                   />
                 </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Monthly Spend (Rp)</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Monthly Spend (Rp)</label>
                   <input
                     type="number"
                     name="monthly_spend"
                     value={formData.monthly_spend}
                     onChange={handleFormChange}
                     placeholder="0"
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                   />
                 </div>
 
                 <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Top Up Frequency (x/bln)</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Top Up Frequency (x/bln)</label>
                   <input
                     type="number"
                     name="topup_freq"
                     value={formData.topup_freq}
                     onChange={handleFormChange}
                     placeholder="0"
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                   />
                 </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Travel Score</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Travel Score</label>
                   <input
                     type="number"
                     step="0.01"
@@ -961,19 +977,19 @@ const UserProfile = () => {
                     value={formData.travel_score}
                     onChange={handleFormChange}
                     placeholder="0.00"
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                   />
                 </div>
 
                 <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Complaint Count</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Complaint Count</label>
                   <input
                     type="number"
                     name="complaint_count"
                     value={formData.complaint_count}
                     onChange={handleFormChange}
                     placeholder="0"
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                   />
                 </div>
               </div>
