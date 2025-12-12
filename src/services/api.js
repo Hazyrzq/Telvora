@@ -379,7 +379,7 @@ export const getCustomerInsights = async (customerId, topN = 5) => {
   // Sanitizer kategori: pastikan hanya kategori valid yang ditampilkan
   const sanitizeCategory = (cat) => {
     const raw = String(cat || '').trim()
-    const allowed = ['Data', 'Voice', 'DeviceBundle', 'Roaming', 'General Offer']
+    const allowed = ['Data', 'Voice', 'DeviceBundle', 'Roaming', 'General Offer', 'Retention Offer', 'Device Upgrade Offer']
     if (allowed.includes(raw)) return raw
     // Mapping umum untuk kategori tak valid
     const map = {
@@ -414,9 +414,11 @@ export const getCustomerInsights = async (customerId, topN = 5) => {
       category: sanitizeCategory(it.category)
     }))
     let userCat = sanitizeCategory(data?.user_category)
-    // Selaraskan dengan notebook: jika churn.raw_label = 'General Offer', paksa Target Offer = 'General Offer'
-    if (String(data?.churn?.raw_label || '').trim() === 'General Offer') {
-      userCat = 'General Offer'
+    // Selaraskan dengan notebook: jika churn.raw_label kategori khusus, paksa Target Offer mengikutinya
+    const churnLabel = String(data?.churn?.raw_label || '').trim()
+    const overrideLabels = ['General Offer', 'Retention Offer', 'Device Upgrade Offer']
+    if (overrideLabels.includes(churnLabel)) {
+      userCat = churnLabel
     }
     return {
       ...data,
@@ -612,18 +614,17 @@ export const createPackage = async (pkg) => {
     if (!isSupabaseConfigured) return null
 
     // Map dari format UI ke format database product_catalog
-    // Jika field sudah snake_case (hasil import), gunakan langsung
     const dbData = {
-      product_id: pkg.product_id || pkg.productId || `PRD${Date.now()}`,
-      product_name: pkg.product_name || pkg.productName || pkg.name || '',
+      product_id: pkg.productId || `PRD${Date.now()}`,
+      product_name: pkg.productName || pkg.name || '',
       description: pkg.description || '',
       category: pkg.category || 'Data',
-      price: parseFloat(pkg.price ?? pkg.price) || 0,
-      duration_days: parseInt(pkg.duration_days ?? pkg.duration ?? pkg.durationDays) || 30,
-      product_capacity_gb: parseFloat(pkg.product_capacity_gb ?? pkg.dataCapacity) || 0,
-      product_capacity_minutes: parseFloat(pkg.product_capacity_minutes ?? pkg.minutes) || 0,
-      product_capacity_sms: parseFloat(pkg.product_capacity_sms ?? pkg.sms) || 0,
-      product_capacity_vod: parseFloat(pkg.product_capacity_vod ?? pkg.vodCapacity) || 0,
+      price: parseFloat(pkg.price) || 0,
+      duration_days: parseInt(pkg.duration || pkg.durationDays) || 30,
+      product_capacity_gb: parseFloat(pkg.dataCapacity) || 0,
+      product_capacity_minutes: parseFloat(pkg.minutes) || 0,
+      product_capacity_sms: parseFloat(pkg.sms) || 0,
+      product_capacity_vod: parseFloat(pkg.vodCapacity) || 0,
     }
 
     // Gunakan product_catalog
@@ -955,4 +956,3 @@ export default {
   getProductSimulations,
   deleteProductSimulation,
 }
-
